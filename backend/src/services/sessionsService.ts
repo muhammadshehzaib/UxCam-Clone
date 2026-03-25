@@ -3,8 +3,10 @@ import { db } from '../db/client';
 export interface SessionFilters {
   userId?: string;
   device?: string;
+  os?: string;
   dateFrom?: string;
   dateTo?: string;
+  minDuration?: number; // ms
 }
 
 export async function listSessions(
@@ -18,10 +20,12 @@ export async function listSessions(
   const params: unknown[] = [projectId];
   let pi = 2;
 
-  if (filters.userId)   { conditions.push(`s.user_id = $${pi++}`);          params.push(filters.userId); }
-  if (filters.device)   { conditions.push(`s.device_type = $${pi++}`);      params.push(filters.device); }
-  if (filters.dateFrom) { conditions.push(`s.started_at >= $${pi++}`);      params.push(new Date(filters.dateFrom)); }
-  if (filters.dateTo)   { conditions.push(`s.started_at <= $${pi++}`);      params.push(new Date(filters.dateTo)); }
+  if (filters.userId)      { conditions.push(`s.user_id = $${pi++}`);                 params.push(filters.userId); }
+  if (filters.device)      { conditions.push(`s.device_type = $${pi++}`);             params.push(filters.device); }
+  if (filters.os)          { conditions.push(`s.os ILIKE $${pi++}`);                  params.push(filters.os); }
+  if (filters.dateFrom)    { conditions.push(`s.started_at >= $${pi++}`);             params.push(new Date(filters.dateFrom)); }
+  if (filters.dateTo)      { conditions.push(`s.started_at <= $${pi++}`);             params.push(new Date(filters.dateTo)); }
+  if (filters.minDuration) { conditions.push(`s.duration_ms >= $${pi++}`);            params.push(filters.minDuration); }
 
   const where = conditions.join(' AND ');
 

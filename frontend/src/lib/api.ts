@@ -44,16 +44,20 @@ export async function getSessions(params?: {
   limit?: number;
   userId?: string;
   device?: string;
+  os?: string;
   dateFrom?: string;
   dateTo?: string;
+  minDuration?: string; // seconds as string
 }): Promise<PaginatedResponse<Session>> {
   const qs = new URLSearchParams();
   if (params?.page) qs.set('page', String(params.page));
   if (params?.limit) qs.set('limit', String(params.limit));
   if (params?.userId) qs.set('userId', params.userId);
   if (params?.device) qs.set('device', params.device);
+  if (params?.os) qs.set('os', params.os);
   if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
   if (params?.dateTo) qs.set('dateTo', params.dateTo);
+  if (params?.minDuration) qs.set('minDuration', params.minDuration);
 
   return apiFetch<PaginatedResponse<Session>>(`/sessions?${qs}`);
 }

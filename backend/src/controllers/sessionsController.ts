@@ -7,11 +7,15 @@ export async function listSessions(req: ProjectRequest, res: Response): Promise<
   const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
 
   try {
+    const minDurationSec = req.query.minDuration ? parseInt(req.query.minDuration as string, 10) : undefined;
+
     const result = await sessionsService.listSessions(req.project!.id, page, limit, {
-      userId:   req.query.userId as string | undefined,
-      device:   req.query.device as string | undefined,
-      dateFrom: req.query.dateFrom as string | undefined,
-      dateTo:   req.query.dateTo as string | undefined,
+      userId:      req.query.userId as string | undefined,
+      device:      req.query.device as string | undefined,
+      os:          req.query.os as string | undefined,
+      dateFrom:    req.query.dateFrom as string | undefined,
+      dateTo:      req.query.dateTo as string | undefined,
+      minDuration: minDurationSec ? minDurationSec * 1000 : undefined, // convert s → ms
     });
     res.json(result);
   } catch (err) {

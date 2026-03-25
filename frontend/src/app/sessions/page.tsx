@@ -1,9 +1,18 @@
 import { getSessions } from '@/lib/api';
 import SessionTable from '@/components/sessions/SessionTable';
+import SessionFilters from '@/components/sessions/SessionFilters';
 import Pagination from '@/components/ui/Pagination';
+import { Suspense } from 'react';
 
 interface Props {
-  searchParams: Promise<{ page?: string; device?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    device?: string;
+    os?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    minDuration?: string;
+  }>;
 }
 
 export const revalidate = 0;
@@ -11,11 +20,18 @@ export const revalidate = 0;
 export default async function SessionsPage({ searchParams }: Props) {
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.page ?? '1'));
-  const device = params.device;
 
   let result = null;
   try {
-    result = await getSessions({ page, limit: 20, device });
+    result = await getSessions({
+      page,
+      limit: 20,
+      device:      params.device,
+      os:          params.os,
+      dateFrom:    params.dateFrom,
+      dateTo:      params.dateTo,
+      minDuration: params.minDuration,
+    });
   } catch {
     // API not available
   }
@@ -26,7 +42,7 @@ export default async function SessionsPage({ searchParams }: Props) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Sessions</h1>
           <p className="text-slate-500 text-sm mt-1">
@@ -34,6 +50,11 @@ export default async function SessionsPage({ searchParams }: Props) {
           </p>
         </div>
       </div>
+
+      {/* Filters — wrapped in Suspense because it uses useSearchParams internally */}
+      <Suspense fallback={<div className="h-16 bg-white border border-slate-200 rounded-xl animate-pulse mb-6" />}>
+        <SessionFilters />
+      </Suspense>
 
       <SessionTable sessions={sessions} />
 

@@ -16,3 +16,5 @@ export const BarChart2 = Icon;
 export const Clock = Icon;
 export const Zap = Icon;
 export const AlertCircle = Icon;
+export const X = Icon;
+export const Filter = Icon;
