@@ -1,0 +1,92 @@
+import {
+  Session,
+  SessionEvent,
+  AppUser,
+  AnalyticsSummary,
+  PaginatedResponse,
+} from '@/types';
+
+const API_URL = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const TOKEN = process.env.DASHBOARD_TOKEN ?? 'dev-dashboard-token';
+
+async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_URL}/api/v1${path}`, {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${TOKEN}`,
+      ...init?.headers,
+    },
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error(`API error ${res.status}: ${path}`);
+  }
+
+  return res.json();
+}
+
+export async function getSummary(days = 30): Promise<AnalyticsSummary> {
+  const res = await apiFetch<{ data: AnalyticsSummary }>(`/analytics/summary?days=${days}`);
+  return res.data;
+}
+
+export async function getSessionsOverTime(days = 30): Promise<Array<{ date: string; count: number }>> {
+  const res = await apiFetch<{ data: Array<{ date: string; count: number }> }>(
+    `/analytics/sessions-over-time?days=${days}`
+  );
+  return res.data;
+}
+
+export async function getSessions(params?: {
+  page?: number;
+  limit?: number;
+  userId?: string;
+  device?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}): Promise<PaginatedResponse<Session>> {
+  const qs = new URLSearchParams();
+  if (params?.page) qs.set('page', String(params.page));
+  if (params?.limit) qs.set('limit', String(params.limit));
+  if (params?.userId) qs.set('userId', params.userId);
+  if (params?.device) qs.set('device', params.device);
+  if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
+  if (params?.dateTo) qs.set('dateTo', params.dateTo);
+
+  return apiFetch<PaginatedResponse<Session>>(`/sessions?${qs}`);
+}
+
+export async function getSession(id: string): Promise<Session> {
+  const res = await apiFetch<{ data: Session }>(`/sessions/${id}`);
+  return res.data;
+}
+
+export async function getSessionEvents(sessionId: string): Promise<SessionEvent[]> {
+  const res = await apiFetch<{ data: SessionEvent[] }>(`/sessions/${sessionId}/events`);
+  return res.data;
+}
+
+export async function getUsers(params?: {
+  page?: number;
+  limit?: number;
+}): Promise<PaginatedResponse<AppUser>> {
+  const qs = new URLSearchParams();
+  if (params?.page) qs.set('page', String(params.page));
+  if (params?.limit) qs.set('limit', String(params.limit));
+  return apiFetch<PaginatedResponse<AppUser>>(`/users?${qs}`);
+}
+
+export async function getUser(id: string): Promise<AppUser> {
+  const res = await apiFetch<{ data: AppUser }>(`/users/${id}`);
+  return res.data;
+}
+
+export async function getUserSessions(userId: string, params?: {
+  page?: number;
+}): Promise<PaginatedResponse<Session>> {
+  const qs = new URLSearchParams();
+  if (params?.page) qs.set('page', String(params.page));
+  return apiFetch<PaginatedResponse<Session>>(`/users/${userId}/sessions?${qs}`);
+}

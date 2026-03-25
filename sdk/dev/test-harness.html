@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UXClone SDK — Test Harness</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+    button { margin: 8px 4px; padding: 8px 16px; cursor: pointer; border-radius: 4px; border: 1px solid #ccc; }
+    button.primary { background: #3b82f6; color: white; border-color: #3b82f6; }
+    input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 200px; }
+    #log { background: #f1f5f9; border-radius: 8px; padding: 16px; margin-top: 24px; min-height: 200px;
+           font-family: monospace; font-size: 13px; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+    .status { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .status.ok { background: #dcfce7; color: #15803d; }
+    .status.error { background: #fee2e2; color: #dc2626; }
+    h2 { margin-top: 32px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <h1>UXClone SDK Test Harness</h1>
+  <p>Generates synthetic user interactions and sends them to the local API (<code>http://localhost:3001</code>).</p>
+  <p>Status: <span id="status" class="status">Not initialized</span></p>
+
+  <h2>Controls</h2>
+  <button class="primary" onclick="initSDK()">Init SDK</button>
+  <button onclick="generateSession()">Generate Synthetic Session</button>
+  <button onclick="identifyUser()">Identify User</button>
+  <button onclick="trackEvent()">Track Custom Event</button>
+  <button onclick="flushNow()">Flush Now</button>
+  <button onclick="endSession()">End Session</button>
+
+  <h2>Simulate Interactions</h2>
+  <input type="text" id="username" placeholder="Type here (input capture test)" />
+  <input type="password" placeholder="Password (should NOT be captured)" />
+  <br/>
+  <button onclick="simulateClick()">Simulate Click</button>
+  <button onclick="simulateNavigation('/checkout')">Navigate to /checkout</button>
+  <button onclick="simulateNavigation('/dashboard')">Navigate to /dashboard</button>
+
+  <h2>Log</h2>
+  <div id="log"></div>
+
+  <script>
+    // Load SDK from dist — in dev, build the SDK first with `npm run build --workspace=packages/sdk`
+    // For this harness, we inline a minimal SDK shim that calls the API directly
+
+    const API = 'http://localhost:3001';
+    const API_KEY = 'proj_dev_key';
+
+    function uuid() {
+      return crypto.randomUUID ? crypto.randomUUID() :
+        'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+          const r = Math.random() * 16 | 0;
+          return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+    }
+
+    let sessionId = null;
+    let anonymousId = localStorage.getItem('uxclone_anon_id') || uuid();
+    let startedAt = null;
+    const events = [];
+
+    localStorage.setItem('uxclone_anon_id', anonymousId);
+
+    function log(msg, data) {
+      const el = document.getElementById('log');
+      const time = new Date().toLocaleTimeString();
+      el.textContent += `[${time}] ${msg}${data ? '\n' + JSON.stringify(data, null, 2) : ''}\n\n`;
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function setStatus(text, ok) {
+      const el = document.getElementById('status');
+      el.textContent = text;
+      el.className = 'status ' + (ok ? 'ok' : 'error');
+    }
+
+    async function post(path, body) {
+      const res = await fetch(API + path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      return res.json();
+    }
+
+    async function initSDK() {
+      sessionId = uuid();
+      startedAt = Date.now();
+      events.length = 0;
+
+      const result = await post('/api/v1/ingest/session/start', {
+        sessionId,
+        anonymousId,
+        apiKey: API_KEY,
+        startedAt,
+        device: {
+          type: 'desktop',
+          os: 'macOS',
+          osVersion: '14.0',
+          browser: 'Chrome',
+          browserVersion: '123',
+          appVersion: '1.0.0',
+          screenWidth: window.screen.width,
+          screenHeight: window.screen.height,
+        },
+      });
+
+      log('Session started', { sessionId, anonymousId, result });
+      setStatus('Session active', true);
+    }
+
+    function pushEvent(ev) {
+      if (!sessionId) { log('⚠ Init SDK first'); return; }
+      events.push({ ...ev, elapsedMs: Date.now() - startedAt });
+      log('Event queued', ev);
+    }
+
+    function simulateClick() {
+      pushEvent({ type: 'click', timestamp: Date.now(), x: Math.random(), y: Math.random(), target: 'button.simulate', screenName: '/harness' });
+    }
+
+    function simulateNavigation(path) {
+      pushEvent({ type: 'navigate', timestamp: Date.now(), value: path, screenName: path });
+    }
+
+    async function flushNow() {
+      if (events.length === 0) { log('Nothing to flush'); return; }
+      const toSend = events.splice(0);
+      const result = await post('/api/v1/ingest/batch', {
+        sessionId, anonymousId, apiKey: API_KEY, events: toSend,
+      });
+      log(`Flushed ${toSend.length} events`, result);
+    }
+
+    async function identifyUser() {
+      const result = await post('/api/v1/ingest/identify', {
+        anonymousId, apiKey: API_KEY,
+        userId: 'test_user_001',
+        traits: { name: 'Test User', email: 'test@example.com' },
+      });
+      log('Identified user', result);
+    }
+
+    async function trackEvent() {
+      pushEvent({ type: 'custom', timestamp: Date.now(), value: 'button_cta_clicked', screenName: '/harness', metadata: { variant: 'A' } });
+      await flushNow();
+    }
+
+    async function generateSession() {
+      await initSDK();
+      await new Promise(r => setTimeout(r, 200));
+
+      // Simulate a realistic user journey
+      const journey = [
+        { type: 'screen_view', value: '/', screenName: '/' },
+        { type: 'click', x: 0.5, y: 0.3, target: 'button.hero-cta', screenName: '/' },
+        { type: 'navigate', value: '/signup', screenName: '/signup' },
+        { type: 'input', target: 'input#email', value: '15', screenName: '/signup' },
+        { type: 'input', target: 'input#name', value: '8', screenName: '/signup' },
+        { type: 'click', x: 0.5, y: 0.7, target: 'button#submit', screenName: '/signup' },
+        { type: 'navigate', value: '/dashboard', screenName: '/dashboard' },
+        { type: 'scroll', value: '400', screenName: '/dashboard' },
+        { type: 'custom', value: 'signup_completed', screenName: '/dashboard', metadata: { plan: 'free' } },
+      ];
+
+      for (const step of journey) {
+        pushEvent({ ...step, timestamp: Date.now() });
+        await new Promise(r => setTimeout(r, 300 + Math.random() * 500));
+      }
+
+      await flushNow();
+
+      // End session
+      const result = await post('/api/v1/ingest/session/end', {
+        sessionId, apiKey: API_KEY, endedAt: Date.now(),
+      });
+      log('Session ended', result);
+      setStatus('Session ended — check dashboard!', true);
+    }
+
+    async function endSession() {
+      if (!sessionId) { log('No active session'); return; }
+      await flushNow();
+      const result = await post('/api/v1/ingest/session/end', {
+        sessionId, apiKey: API_KEY, endedAt: Date.now(),
+      });
+      log('Session ended', result);
+      sessionId = null;
+      setStatus('Session ended', true);
+    }
+
+    // Auto-capture real clicks for demo
+    document.addEventListener('click', (e) => {
+      if (!sessionId) return;
+      if (e.target.onclick) return; // Skip button clicks handled above
+      pushEvent({
+        type: 'click', timestamp: Date.now(),
+        x: e.clientX / window.innerWidth,
+        y: e.clientY / window.innerHeight,
+        target: e.target.tagName.toLowerCase(),
+        screenName: '/harness',
+      });
+    });
+
+    log('Test harness loaded. Click "Init SDK" to start a session.');
+  </script>
+</body>
+</html>
