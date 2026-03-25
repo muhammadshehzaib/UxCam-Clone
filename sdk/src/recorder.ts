@@ -12,6 +12,7 @@ function sanitizeSelector(el: Element): string {
   let depth = 0;
 
   while (current && depth < 3) {
+    if (!current.tagName) break;
     let selector = current.tagName.toLowerCase();
     if (current.id) {
       selector += `#${current.id}`;

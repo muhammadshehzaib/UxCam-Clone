@@ -22,7 +22,7 @@ export async function listSessions(req: ProjectRequest, res: Response): Promise<
 
 export async function getSession(req: ProjectRequest, res: Response): Promise<void> {
   try {
-    const session = await sessionsService.getSessionById(req.project!.id, req.params.id);
+    const session = await sessionsService.getSessionById(req.project!.id, req.params.id as string);
     res.json({ data: session });
   } catch (err: unknown) {
     if (err instanceof Error && err.message === 'NOT_FOUND') {

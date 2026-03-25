@@ -17,7 +17,7 @@ export async function listUsers(req: ProjectRequest, res: Response): Promise<voi
 
 export async function getUser(req: ProjectRequest, res: Response): Promise<void> {
   try {
-    const user = await usersService.getUserById(req.project!.id, req.params.id);
+    const user = await usersService.getUserById(req.project!.id, req.params.id as string);
     res.json({ data: user });
   } catch (err: unknown) {
     if (err instanceof Error && err.message === 'NOT_FOUND') {
@@ -35,7 +35,7 @@ export async function getUserSessions(req: ProjectRequest, res: Response): Promi
 
   try {
     const result = await usersService.listUserSessions(
-      req.project!.id, req.params.id, page, limit
+      req.project!.id, req.params.id as string, page, limit
     );
     res.json(result);
   } catch (err) {

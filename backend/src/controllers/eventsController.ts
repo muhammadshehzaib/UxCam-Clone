@@ -6,7 +6,7 @@ export async function getSessionEvents(req: ProjectRequest, res: Response): Prom
   try {
     const events = await eventsService.getEventsBySession(
       req.project!.id,
-      req.params.sessionId
+      req.params.sessionId as string
     );
     res.json({ data: events });
   } catch (err: unknown) {
