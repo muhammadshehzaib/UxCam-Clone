@@ -24,3 +24,6 @@ export const GitBranch = Icon;
 export const Plus = Icon;
 export const Trash2 = Icon;
 export const ChevronDown = Icon;
+export const Bug = Icon;
+export const AlertTriangle = Icon;
+export const ExternalLink = Icon;

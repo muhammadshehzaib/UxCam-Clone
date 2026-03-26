@@ -7,6 +7,8 @@ import {
   Funnel,
   FunnelStep,
   FunnelResults,
+  CrashGroup,
+  CrashSession,
   PaginatedResponse,
 } from '@/types';
 
@@ -129,5 +131,21 @@ export async function deleteFunnel(id: string): Promise<void> {
 
 export async function getFunnelResults(id: string, days = 30): Promise<FunnelResults> {
   const res = await apiFetch<{ data: FunnelResults }>(`/funnels/${id}/results?days=${days}`);
+  return res.data;
+}
+
+export async function getCrashGroups(days = 30): Promise<CrashGroup[]> {
+  const res = await apiFetch<{ data: CrashGroup[] }>(`/analytics/crashes?days=${days}`);
+  return res.data;
+}
+
+export async function getCrashSessions(
+  message: string,
+  filename?: string,
+  days = 30
+): Promise<CrashSession[]> {
+  const qs = new URLSearchParams({ message, days: String(days) });
+  if (filename) qs.set('filename', filename);
+  const res = await apiFetch<{ data: CrashSession[] }>(`/analytics/crashes/sessions?${qs}`);
   return res.data;
 }

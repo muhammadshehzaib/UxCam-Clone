@@ -6,12 +6,15 @@ import { ChevronLeft } from 'lucide-react';
 
 interface Props {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ seek?: string }>;
 }
 
 export const revalidate = 0;
 
-export default async function SessionReplayPage({ params }: Props) {
+export default async function SessionReplayPage({ params, searchParams }: Props) {
   const { id } = await params;
+  const { seek } = await searchParams;
+  const initialSeekMs = seek ? Math.max(0, parseInt(seek)) : undefined;
 
   let session = null;
   let events = null;
@@ -43,7 +46,7 @@ export default async function SessionReplayPage({ params }: Props) {
         <p className="text-slate-500 text-sm mt-1 font-mono">{id}</p>
       </div>
 
-      <ReplayViewerClient session={session} events={events ?? []} />
+      <ReplayViewerClient session={session} events={events ?? []} initialSeekMs={initialSeekMs} />
     </div>
   );
 }

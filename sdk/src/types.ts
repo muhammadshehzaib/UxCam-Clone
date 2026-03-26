@@ -4,7 +4,8 @@ export type EventType =
   | 'input'
   | 'navigate'
   | 'screen_view'
-  | 'custom';
+  | 'custom'
+  | 'crash';
 
 export interface SDKEvent {
   type: EventType;

@@ -95,3 +95,23 @@ export interface FunnelResults {
   total_sessions: number;
   steps: FunnelStepResult[];
 }
+
+export interface CrashGroup {
+  message: string;
+  filename: string;
+  total_occurrences: number;
+  affected_sessions: number;
+  first_seen: string;
+  last_seen: string;
+}
+
+export interface CrashSession {
+  id: string;
+  anonymous_id: string;
+  external_id: string | null;
+  started_at: string;
+  duration_ms: number | null;
+  device_type: string | null;
+  os: string | null;
+  crash_elapsed_ms: number;
+}

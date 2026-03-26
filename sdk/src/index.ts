@@ -2,10 +2,12 @@ import { SDKConfig, SDKEvent } from './types';
 import { SessionManager } from './session';
 import { Transport } from './transport';
 import { attachRecorder } from './recorder';
+import { attachErrorRecorder } from './errorRecorder';
 
 let session: SessionManager | null = null;
 let transport: Transport | null = null;
 let detachRecorder: (() => void) | null = null;
+let detachErrorRecorder: (() => void) | null = null;
 let currentScreen = '/';
 
 function assertInitialized(): void {
@@ -33,6 +35,16 @@ export const UXClone = {
 
     // Send session start to API
     void session.sendSessionStart(config.endpoint);
+
+    // Attach error recorder (before DOM recorder so crashes on init are caught)
+    detachErrorRecorder = attachErrorRecorder(
+      (event: SDKEvent) => {
+        session!.touch();
+        transport!.push(event);
+      },
+      () => session!.getElapsedMs(),
+      () => currentScreen
+    );
 
     // Attach DOM recorder
     detachRecorder = attachRecorder(
@@ -123,9 +135,11 @@ export const UXClone = {
     transport?.stopAutoFlush();
     transport?.flushSync();
     detachRecorder?.();
+    detachErrorRecorder?.();
     session = null;
     transport = null;
     detachRecorder = null;
+    detachErrorRecorder = null;
   },
 };
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Session, SessionEvent } from '@/types';
 import { useReplayEngine } from './useReplayEngine';
 import { detectRageClickTimestamps } from '@/lib/rageClickDetector';
@@ -11,15 +12,24 @@ import SessionInfoPanel from './SessionInfoPanel';
 interface ReplayViewerClientProps {
   session: Session;
   events: SessionEvent[];
+  initialSeekMs?: number;
 }
 
-export default function ReplayViewerClient({ session, events }: ReplayViewerClientProps) {
+export default function ReplayViewerClient({ session, events, initialSeekMs }: ReplayViewerClientProps) {
   const durationMs = session.duration_ms ?? (events.length > 0 ? events[events.length - 1].elapsed_ms + 100 : 0);
 
   const { currentTimeMs, isPlaying, speed, activeEventIndex, play, pause, seek, setSpeed } =
     useReplayEngine(events, durationMs);
 
   const rageTimestamps = detectRageClickTimestamps(events);
+
+  // Jump to crash / deep-link position on first render
+  useEffect(() => {
+    if (initialSeekMs !== undefined && initialSeekMs > 0) {
+      seek(initialSeekMs);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (events.length === 0) {
     return (

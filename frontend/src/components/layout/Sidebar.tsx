@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart2, Users, PlaySquare, Home, Flame, GitBranch } from 'lucide-react';
+import { BarChart2, Users, PlaySquare, Home, Flame, GitBranch, Bug } from 'lucide-react';
 
 const navItems = [
   { href: '/dashboard', label: 'Overview',  icon: Home },
@@ -10,6 +10,7 @@ const navItems = [
   { href: '/users',     label: 'Users',     icon: Users },
   { href: '/heatmaps',  label: 'Heatmaps',  icon: Flame },
   { href: '/funnels',   label: 'Funnels',   icon: GitBranch },
+  { href: '/crashes',   label: 'Crashes',   icon: Bug },
   { href: '/analytics', label: 'Analytics', icon: BarChart2 },
 ];
 
