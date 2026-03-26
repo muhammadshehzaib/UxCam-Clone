@@ -9,6 +9,7 @@ import {
   FunnelResults,
   CrashGroup,
   CrashSession,
+  Project,
   PaginatedResponse,
 } from '@/types';
 
@@ -176,6 +177,27 @@ export async function authLogin(email: string, password: string): Promise<AuthRe
   }
   const body = await res.json() as { data: AuthResult };
   return body.data;
+}
+
+export async function getProjects(): Promise<Project[]> {
+  const res = await apiFetch<{ data: Project[] }>('/projects');
+  return res.data;
+}
+
+export async function createProject(name: string): Promise<{ project: Project; token: string }> {
+  const res = await apiFetch<{ data: { project: Project; token: string } }>('/projects', {
+    method: 'POST',
+    body: JSON.stringify({ name }),
+  });
+  return res.data;
+}
+
+export async function switchProject(projectId: string): Promise<{ token: string; project: Project }> {
+  const res = await apiFetch<{ data: { token: string; project: Project } }>(
+    `/projects/${projectId}/switch`,
+    { method: 'POST' }
+  );
+  return res.data;
 }
 
 export async function authRegister(

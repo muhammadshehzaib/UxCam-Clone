@@ -31,3 +31,5 @@ export const Eye = Icon;
 export const EyeOff = Icon;
 export const LogIn = Icon;
 export const LogOut = Icon;
+export const FolderOpen = Icon;
+export const Check = Icon;

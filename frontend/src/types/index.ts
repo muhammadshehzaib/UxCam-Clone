@@ -105,6 +105,14 @@ export interface CrashGroup {
   last_seen: string;
 }
 
+export interface Project {
+  id:         string;
+  name:       string;
+  api_key:    string;
+  role:       string;
+  created_at: string;
+}
+
 export interface CrashSession {
   id: string;
   anonymous_id: string;

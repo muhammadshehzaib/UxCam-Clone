@@ -68,6 +68,12 @@ export async function register(
     );
     const user = userResult.rows[0];
 
+    // Add user to user_projects join table
+    await client.query(
+      `INSERT INTO user_projects (user_id, project_id, role) VALUES ($1, $2, 'admin')`,
+      [user.id, project.id]
+    );
+
     await client.query('COMMIT');
 
     const token = signToken({ sub: user.id, projectId: project.id, email: user.email });

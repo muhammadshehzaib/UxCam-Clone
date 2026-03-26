@@ -6,6 +6,7 @@ import { AuthTokenPayload } from '../services/authService';
 
 export interface ProjectRequest extends Request {
   project?: { id: string; name: string; apiKey: string };
+  user?:    { id: string; email: string };
 }
 
 /** Validates API key from request body (SDK ingest routes) */
@@ -39,10 +40,10 @@ export async function requireApiKey(
   next();
 }
 
-/** Validates dashboard token from Authorization header (read routes).
+/** Validates dashboard token from Authorization header.
  *  Accepts:
- *   1. A signed JWT (production) — verifies signature, loads project from DB.
- *   2. The static DASHBOARD_TOKEN env var (development / test backward compat).
+ *   1. Signed JWT (production) — verifies, loads project from DB, sets req.user.
+ *   2. Static DASHBOARD_TOKEN env var (development / test backward compat).
  */
 export async function requireDashboardToken(
   req: ProjectRequest,
@@ -66,6 +67,7 @@ export async function requireDashboardToken(
       name:   'Dev Project',
       apiKey: 'proj_dev_key',
     };
+    req.user = { id: '00000000-0000-0000-0000-000000000002', email: 'dev@uxclone.local' };
     next();
     return;
   }
@@ -89,6 +91,7 @@ export async function requireDashboardToken(
       name:   result.rows[0].name,
       apiKey: result.rows[0].api_key,
     };
+    req.user = { id: decoded.sub, email: decoded.email };
 
     next();
   } catch {

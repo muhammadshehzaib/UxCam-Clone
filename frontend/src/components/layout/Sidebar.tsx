@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { BarChart2, Users, PlaySquare, Home, Flame, GitBranch, Bug, LogOut } from 'lucide-react';
 import { clearToken } from '@/lib/auth';
+import ProjectSwitcher from './ProjectSwitcher';
 
 const navItems = [
   { href: '/dashboard', label: 'Overview',  icon: Home },
@@ -27,7 +28,7 @@ export default function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 w-56 bg-slate-900 text-slate-100 flex flex-col z-10">
       {/* Logo */}
-      <div className="px-5 py-5 border-b border-slate-700">
+      <div className="px-5 py-4 border-b border-slate-700">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-brand-500 flex items-center justify-center text-white text-sm font-bold">
             U
@@ -36,8 +37,11 @@ export default function Sidebar() {
         </div>
       </div>
 
+      {/* Project switcher */}
+      <ProjectSwitcher />
+
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href);
           return (
