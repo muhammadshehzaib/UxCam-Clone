@@ -2,15 +2,23 @@ import { Response } from 'express';
 import { ProjectRequest } from '../middleware';
 import * as sessionsService from '../services/sessionsService';
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function listSessions(req: ProjectRequest, res: Response): Promise<void> {
   const page  = Math.max(1, parseInt(req.query.page as string) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
+
+  const rawUserId = req.query.userId as string | undefined;
+  if (rawUserId && !UUID_REGEX.test(rawUserId)) {
+    res.status(400).json({ error: 'Invalid userId format' });
+    return;
+  }
 
   try {
     const minDurationSec = req.query.minDuration ? parseInt(req.query.minDuration as string, 10) : undefined;
 
     const result = await sessionsService.listSessions(req.project!.id, page, limit, {
-      userId:      req.query.userId as string | undefined,
+      userId:      rawUserId,
       device:      req.query.device as string | undefined,
       os:          req.query.os as string | undefined,
       dateFrom:    req.query.dateFrom as string | undefined,

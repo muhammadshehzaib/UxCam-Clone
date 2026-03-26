@@ -54,13 +54,15 @@ export async function getSummary(projectId: string, days: number) {
 }
 
 export async function getSessionsOverTime(projectId: string, days: number) {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
   const result = await db.query(
     `SELECT DATE(started_at) AS date, COUNT(*) AS count
      FROM sessions
-     WHERE project_id = $1 AND started_at >= NOW() - INTERVAL '${days} days'
+     WHERE project_id = $1 AND started_at >= $2
      GROUP BY DATE(started_at)
      ORDER BY date ASC`,
-    [projectId]
+    [projectId, since]
   );
 
   return result.rows.map((r) => ({ date: r.date, count: parseInt(r.count, 10) }));

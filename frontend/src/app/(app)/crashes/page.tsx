@@ -13,11 +13,12 @@ export default function CrashesPage() {
   const [sessions, setSessions]         = useState<CrashSession[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(false);
   const [days, setDays]                 = useState(30);
+  const [apiError, setApiError]         = useState(false);
 
   useEffect(() => {
     getCrashGroups(days)
-      .then((data) => { setCrashes(data); setSelected(null); setSessions([]); })
-      .catch(() => setCrashes([]));
+      .then((data) => { setCrashes(data); setApiError(false); setSelected(null); setSessions([]); })
+      .catch(() => { setApiError(true); setCrashes([]); });
   }, [days]);
 
   useEffect(() => {
@@ -60,6 +61,16 @@ export default function CrashesPage() {
           ))}
         </div>
       </div>
+
+      {/* API error banner */}
+      {apiError && (
+        <div
+          className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-6 text-sm text-red-600"
+          data-testid="api-error-banner"
+        >
+          Could not load crash data. Check that the API is running.
+        </div>
+      )}
 
       {/* Crash list */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm mb-6">

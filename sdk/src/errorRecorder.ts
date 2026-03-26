@@ -77,11 +77,21 @@ export function attachErrorRecorder(
     });
   };
 
-  window.onerror    = onerrorHandler;
+  // Save previous handler so we don't break Sentry, Datadog, or any existing onerror
+  const previousOnError = window.onerror;
+
+  window.onerror = (message, source, lineno, colno, error) => {
+    onerrorHandler(message, source, lineno, colno, error);
+    if (typeof previousOnError === 'function') {
+      return previousOnError.call(window, message, source, lineno, colno, error);
+    }
+    return false;
+  };
+
   window.addEventListener('unhandledrejection', rejectionHandler);
 
   return () => {
-    window.onerror = null;
+    window.onerror = previousOnError; // restore, not null
     window.removeEventListener('unhandledrejection', rejectionHandler);
   };
 }

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { ProjectRequest } from '../middleware';
 import * as funnelService from '../services/funnelService';
 
@@ -61,7 +61,7 @@ export async function deleteFunnel(req: ProjectRequest, res: Response): Promise<
   }
 }
 
-export async function getFunnelResults(req: Request & ProjectRequest, res: Response): Promise<void> {
+export async function getFunnelResults(req: ProjectRequest, res: Response): Promise<void> {
   const days = Math.min(90, Math.max(1, parseInt(req.query.days as string) || 30));
 
   try {

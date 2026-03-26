@@ -24,6 +24,8 @@ export default function HeatmapViewer({ screens, initialScreen }: HeatmapViewerP
   useEffect(() => {
     if (!selected) return;
 
+    setPoints([]);       // clear stale data immediately — don't show previous screen's data
+    setTotalClicks(0);
     setLoading(true);
     getHeatmap(selected)
       .then((data) => {
