@@ -27,3 +27,7 @@ export const ChevronDown = Icon;
 export const Bug = Icon;
 export const AlertTriangle = Icon;
 export const ExternalLink = Icon;
+export const Eye = Icon;
+export const EyeOff = Icon;
+export const LogIn = Icon;
+export const LogOut = Icon;

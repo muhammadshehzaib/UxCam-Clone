@@ -7,6 +7,7 @@ import eventsRouter from './routes/events';
 import usersRouter from './routes/users';
 import analyticsRouter from './routes/analytics';
 import funnelsRouter from './routes/funnels';
+import authRouter from './routes/auth';
 
 const app = express();
 
@@ -21,5 +22,6 @@ app.use('/api/v1/sessions', sessionsRouter);
 app.use('/api/v1/users', usersRouter);
 app.use('/api/v1/analytics', analyticsRouter);
 app.use('/api/v1/funnels', funnelsRouter);
+app.use('/api/v1/auth',   authRouter);
 
 export default app;

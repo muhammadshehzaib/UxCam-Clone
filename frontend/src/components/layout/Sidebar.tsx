@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { BarChart2, Users, PlaySquare, Home, Flame, GitBranch, Bug } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
+import { BarChart2, Users, PlaySquare, Home, Flame, GitBranch, Bug, LogOut } from 'lucide-react';
+import { clearToken } from '@/lib/auth';
 
 const navItems = [
   { href: '/dashboard', label: 'Overview',  icon: Home },
@@ -16,6 +17,12 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router   = useRouter();
+
+  function handleLogout() {
+    clearToken();
+    router.push('/login');
+  }
 
   return (
     <aside className="fixed inset-y-0 left-0 w-56 bg-slate-900 text-slate-100 flex flex-col z-10">
@@ -50,9 +57,16 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="px-5 py-4 border-t border-slate-700">
-        <p className="text-xs text-slate-500">Dev Project</p>
+      {/* Footer — logout */}
+      <div className="px-3 py-4 border-t border-slate-700">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-slate-100 transition-colors"
+          data-testid="logout-button"
+        >
+          <LogOut size={16} />
+          Sign out
+        </button>
       </div>
     </aside>
   );

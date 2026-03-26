@@ -13,14 +13,23 @@ import {
 } from '@/types';
 
 const API_URL = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-const TOKEN = process.env.DASHBOARD_TOKEN ?? 'dev-dashboard-token';
+
+function getToken(): string {
+  // Client-side: read from cookie
+  if (typeof document !== 'undefined') {
+    const match = document.cookie.split('; ').find((c) => c.startsWith('uxclone_token='));
+    if (match) return match.split('=').slice(1).join('=');
+  }
+  // Server-side / test fallback: use env var
+  return process.env.DASHBOARD_TOKEN ?? 'dev-dashboard-token';
+}
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}/api/v1${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${TOKEN}`,
+      Authorization: `Bearer ${getToken()}`,
       ...init?.headers,
     },
     cache: 'no-store',
@@ -148,4 +157,42 @@ export async function getCrashSessions(
   if (filename) qs.set('filename', filename);
   const res = await apiFetch<{ data: CrashSession[] }>(`/analytics/crashes/sessions?${qs}`);
   return res.data;
+}
+
+export interface AuthResult {
+  token: string;
+  user: { id: string; email: string; name: string | null; projectId: string };
+}
+
+export async function authLogin(email: string, password: string): Promise<AuthResult> {
+  const res = await fetch(`${API_URL}/api/v1/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error((body as { error?: string }).error ?? 'Login failed');
+  }
+  const body = await res.json() as { data: AuthResult };
+  return body.data;
+}
+
+export async function authRegister(
+  email: string,
+  password: string,
+  projectName: string,
+  name?: string
+): Promise<AuthResult> {
+  const res = await fetch(`${API_URL}/api/v1/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, projectName, name }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error((body as { error?: string }).error ?? 'Registration failed');
+  }
+  const body = await res.json() as { data: AuthResult };
+  return body.data;
 }
