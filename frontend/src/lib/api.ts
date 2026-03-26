@@ -4,6 +4,9 @@ import {
   AppUser,
   AnalyticsSummary,
   HeatmapPoint,
+  Funnel,
+  FunnelStep,
+  FunnelResults,
   PaginatedResponse,
 } from '@/types';
 
@@ -104,5 +107,27 @@ export async function getHeatmap(screen: string, days = 30): Promise<HeatmapPoin
 
 export async function getHeatmapScreens(days = 30): Promise<string[]> {
   const res = await apiFetch<{ data: string[] }>(`/analytics/screens?days=${days}`);
+  return res.data;
+}
+
+export async function getFunnels(): Promise<Funnel[]> {
+  const res = await apiFetch<{ data: Funnel[] }>('/funnels');
+  return res.data;
+}
+
+export async function createFunnel(name: string, steps: FunnelStep[]): Promise<Funnel> {
+  const res = await apiFetch<{ data: Funnel }>('/funnels', {
+    method: 'POST',
+    body: JSON.stringify({ name, steps }),
+  });
+  return res.data;
+}
+
+export async function deleteFunnel(id: string): Promise<void> {
+  await apiFetch(`/funnels/${id}`, { method: 'DELETE' });
+}
+
+export async function getFunnelResults(id: string, days = 30): Promise<FunnelResults> {
+  const res = await apiFetch<{ data: FunnelResults }>(`/funnels/${id}/results?days=${days}`);
   return res.data;
 }

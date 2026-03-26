@@ -20,3 +20,7 @@ export const X = Icon;
 export const Filter = Icon;
 export const Flame = Icon;
 export const Monitor = Icon;
+export const GitBranch = Icon;
+export const Plus = Icon;
+export const Trash2 = Icon;
+export const ChevronDown = Icon;

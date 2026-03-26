@@ -69,3 +69,29 @@ export interface HeatmapPoint {
   y: number;   // normalized 0–1
   count: number;
 }
+
+export interface FunnelStep {
+  screen: string;
+}
+
+export interface Funnel {
+  id: string;
+  project_id: string;
+  name: string;
+  steps: FunnelStep[];
+  created_at: string;
+}
+
+export interface FunnelStepResult {
+  screen: string;
+  count: number;
+  dropoff: number;
+  dropoff_pct: number;
+  conversion_pct: number;
+}
+
+export interface FunnelResults {
+  funnel: Funnel;
+  total_sessions: number;
+  steps: FunnelStepResult[];
+}
