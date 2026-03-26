@@ -18,3 +18,5 @@ export const Zap = Icon;
 export const AlertCircle = Icon;
 export const X = Icon;
 export const Filter = Icon;
+export const Flame = Icon;
+export const Monitor = Icon;
