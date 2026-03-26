@@ -49,7 +49,16 @@ export default function SessionTable({ sessions }: SessionTableProps) {
                 <span className="mr-1">{getDeviceIcon(s.device_type)}</span>
                 {s.os ?? '—'}
               </td>
-              <td className="px-4 py-3 text-slate-600">{s.event_count}</td>
+              <td className="px-4 py-3 text-slate-600">
+                <div className="flex items-center gap-2">
+                  {s.event_count}
+                  {s.metadata?.rage_click && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-600">
+                      Rage
+                    </span>
+                  )}
+                </div>
+              </td>
               <td className="px-4 py-3">
                 <Link
                   href={`/sessions/${s.id}`}

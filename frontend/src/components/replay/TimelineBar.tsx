@@ -9,6 +9,7 @@ interface TimelineBarProps {
   durationMs: number;
   currentTimeMs: number;
   onSeek: (ms: number) => void;
+  rageTimestamps?: number[];
 }
 
 export default function TimelineBar({
@@ -16,6 +17,7 @@ export default function TimelineBar({
   durationMs,
   currentTimeMs,
   onSeek,
+  rageTimestamps = [],
 }: TimelineBarProps) {
   const barRef = useRef<HTMLDivElement>(null);
 
@@ -71,6 +73,26 @@ export default function TimelineBar({
             }}
             title={`${ev.type} at ${(ev.elapsed_ms / 1000).toFixed(1)}s${ev.screen_name ? ` · ${ev.screen_name}` : ''}`}
           />
+        );
+      })}
+
+      {/* Rage click markers — red diamonds above the track */}
+      {rageTimestamps.map((ms, i) => {
+        const pct = durationMs > 0 ? (ms / durationMs) * 100 : 0;
+        return (
+          <div
+            key={`rage-${i}`}
+            data-testid="rage-marker"
+            className="absolute -translate-x-1/2 z-20"
+            style={{ left: `${pct}%`, top: '50%', marginTop: -10 }}
+            title={`Rage click at ${(ms / 1000).toFixed(1)}s`}
+          >
+            {/* Diamond shape via rotation */}
+            <div
+              className="w-3 h-3 rotate-45"
+              style={{ backgroundColor: EVENT_COLORS.rage_click }}
+            />
+          </div>
         );
       })}
 

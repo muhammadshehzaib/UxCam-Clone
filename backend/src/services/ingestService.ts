@@ -1,5 +1,6 @@
 import { db } from '../db/client';
 import { redis } from '../db/redis';
+import { analyzeAndStoreRageClicks } from './rageClickService';
 
 interface DeviceInfo {
   type?: string;
@@ -140,6 +141,11 @@ export async function endSession(
 
   await redis.del(`session:active:${sessionId}`);
   await redis.del(`analytics:summary:${projectId}`);
+
+  // Fire-and-forget rage click analysis — does not block the response
+  analyzeAndStoreRageClicks(sessionId, projectId).catch((err) =>
+    console.error('rage click analysis failed:', err)
+  );
 
   return result.rows[0]?.duration_ms ?? 0;
 }

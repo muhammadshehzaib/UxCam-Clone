@@ -35,7 +35,7 @@ export async function listSessions(
               s.duration_ms, s.device_type, s.os, s.os_version,
               s.browser, s.browser_version, s.app_version,
               s.country, s.city, s.screen_width, s.screen_height,
-              s.event_count, u.external_id, u.traits
+              s.event_count, s.metadata, u.external_id, u.traits
        FROM sessions s
        LEFT JOIN app_users u ON u.id = s.user_id
        WHERE ${where}

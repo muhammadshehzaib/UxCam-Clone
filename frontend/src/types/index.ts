@@ -1,3 +1,10 @@
+export interface SessionMetadata {
+  rage_click?: boolean;
+  rage_click_count?: number;
+  rage_click_timestamps?: number[];
+  [key: string]: unknown;
+}
+
 export interface Session {
   id: string;
   anonymous_id: string;
@@ -16,6 +23,7 @@ export interface Session {
   screen_width: number | null;
   screen_height: number | null;
   event_count: number;
+  metadata: SessionMetadata | null;
   external_id: string | null;
   traits: Record<string, unknown> | null;
 }

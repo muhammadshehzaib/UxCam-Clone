@@ -2,6 +2,7 @@
 
 import { Session, SessionEvent } from '@/types';
 import { useReplayEngine } from './useReplayEngine';
+import { detectRageClickTimestamps } from '@/lib/rageClickDetector';
 import ReplayCanvas from './ReplayCanvas';
 import TimelineBar from './TimelineBar';
 import PlaybackControls from './PlaybackControls';
@@ -17,6 +18,8 @@ export default function ReplayViewerClient({ session, events }: ReplayViewerClie
 
   const { currentTimeMs, isPlaying, speed, activeEventIndex, play, pause, seek, setSpeed } =
     useReplayEngine(events, durationMs);
+
+  const rageTimestamps = detectRageClickTimestamps(events);
 
   if (events.length === 0) {
     return (
@@ -83,6 +86,7 @@ export default function ReplayViewerClient({ session, events }: ReplayViewerClie
           durationMs={durationMs}
           currentTimeMs={currentTimeMs}
           onSeek={seek}
+          rageTimestamps={rageTimestamps}
         />
         <PlaybackControls
           isPlaying={isPlaying}

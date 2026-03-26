@@ -53,4 +53,5 @@ export const EVENT_COLORS: Record<string, string> = {
   input: '#F59E0B',
   custom: '#F97316',
   screen_view: '#14B8A6',
+  rage_click: '#EF4444',
 };
