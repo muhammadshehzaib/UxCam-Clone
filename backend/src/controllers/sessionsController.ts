@@ -19,11 +19,13 @@ export async function listSessions(req: ProjectRequest, res: Response): Promise<
 
     const result = await sessionsService.listSessions(req.project!.id, page, limit, {
       userId:      rawUserId,
-      device:      req.query.device as string | undefined,
-      os:          req.query.os as string | undefined,
-      dateFrom:    req.query.dateFrom as string | undefined,
-      dateTo:      req.query.dateTo as string | undefined,
-      minDuration: minDurationSec ? minDurationSec * 1000 : undefined, // convert s → ms
+      device:      req.query.device      as string | undefined,
+      os:          req.query.os          as string | undefined,
+      browser:     req.query.browser     as string | undefined,
+      dateFrom:    req.query.dateFrom    as string | undefined,
+      dateTo:      req.query.dateTo      as string | undefined,
+      minDuration: minDurationSec ? minDurationSec * 1000 : undefined,
+      rageClick:   req.query.rageClick === 'true' ? true : undefined,
     });
     res.json(result);
   } catch (err) {
