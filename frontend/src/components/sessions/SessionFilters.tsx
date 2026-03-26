@@ -1,44 +1,51 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { X } from 'lucide-react';
+import SegmentPicker from '@/components/segments/SegmentPicker';
 
-const DEVICES = ['mobile', 'tablet', 'desktop'];
-const OS_OPTIONS = ['macOS', 'Windows', 'iOS', 'Android', 'Linux'];
+const DEVICES  = ['mobile', 'tablet', 'desktop'];
+const OS_LIST  = ['macOS', 'Windows', 'iOS', 'Android', 'Linux'];
+const BROWSERS = ['Chrome', 'Firefox', 'Safari', 'Edge'];
 
 export default function SessionFilters() {
-  const router = useRouter();
-  const pathname = usePathname();
+  const router       = useRouter();
+  const pathname     = usePathname();
   const searchParams = useSearchParams();
 
   const current = {
-    dateFrom:    searchParams.get('dateFrom') ?? '',
-    dateTo:      searchParams.get('dateTo') ?? '',
-    device:      searchParams.get('device') ?? '',
-    os:          searchParams.get('os') ?? '',
+    dateFrom:    searchParams.get('dateFrom')    ?? '',
+    dateTo:      searchParams.get('dateTo')      ?? '',
+    device:      searchParams.get('device')      ?? '',
+    os:          searchParams.get('os')          ?? '',
+    browser:     searchParams.get('browser')     ?? '',
     minDuration: searchParams.get('minDuration') ?? '',
+    rageClick:   searchParams.get('rageClick')   ?? '',
   };
 
   const hasFilters = Object.values(current).some(Boolean);
 
   function update(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-    params.delete('page'); // reset to page 1 on filter change
+    if (value) { params.set(key, value); } else { params.delete(key); }
+    params.delete('page');
     router.push(`${pathname}?${params.toString()}`);
   }
 
-  function clearAll() {
-    router.push(pathname);
-  }
+  function clearAll() { router.push(pathname); }
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm">
       <div className="flex flex-wrap items-end gap-3">
+
+        {/* Segment picker */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-slate-500 font-medium">Segments</label>
+          <Suspense fallback={null}>
+            <SegmentPicker />
+          </Suspense>
+        </div>
 
         {/* Date From */}
         <div className="flex flex-col gap-1">
@@ -71,9 +78,7 @@ export default function SessionFilters() {
             className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
           >
             <option value="">All devices</option>
-            {DEVICES.map((d) => (
-              <option key={d} value={d} className="capitalize">{d}</option>
-            ))}
+            {DEVICES.map((d) => <option key={d} value={d} className="capitalize">{d}</option>)}
           </select>
         </div>
 
@@ -86,9 +91,20 @@ export default function SessionFilters() {
             className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
           >
             <option value="">All OS</option>
-            {OS_OPTIONS.map((o) => (
-              <option key={o} value={o}>{o}</option>
-            ))}
+            {OS_LIST.map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+
+        {/* Browser */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-slate-500 font-medium">Browser</label>
+          <select
+            value={current.browser}
+            onChange={(e) => update('browser', e.target.value)}
+            className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+          >
+            <option value="">All browsers</option>
+            {BROWSERS.map((b) => <option key={b} value={b}>{b}</option>)}
           </select>
         </div>
 
@@ -103,6 +119,20 @@ export default function SessionFilters() {
             onChange={(e) => update('minDuration', e.target.value)}
             className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 w-28"
           />
+        </div>
+
+        {/* Rage click toggle */}
+        <div className="flex items-center gap-2 pb-1">
+          <input
+            id="rageClickFilter"
+            type="checkbox"
+            checked={current.rageClick === 'true'}
+            onChange={(e) => update('rageClick', e.target.checked ? 'true' : '')}
+            className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+          />
+          <label htmlFor="rageClickFilter" className="text-sm text-slate-600 whitespace-nowrap">
+            Rage clicks
+          </label>
         </div>
 
         {/* Clear */}
@@ -120,21 +150,13 @@ export default function SessionFilters() {
       {/* Active filter badges */}
       {hasFilters && (
         <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100">
-          {current.dateFrom && (
-            <FilterBadge label={`From: ${current.dateFrom}`} onRemove={() => update('dateFrom', '')} />
-          )}
-          {current.dateTo && (
-            <FilterBadge label={`To: ${current.dateTo}`} onRemove={() => update('dateTo', '')} />
-          )}
-          {current.device && (
-            <FilterBadge label={`Device: ${current.device}`} onRemove={() => update('device', '')} />
-          )}
-          {current.os && (
-            <FilterBadge label={`OS: ${current.os}`} onRemove={() => update('os', '')} />
-          )}
-          {current.minDuration && (
-            <FilterBadge label={`Min: ${current.minDuration}s`} onRemove={() => update('minDuration', '')} />
-          )}
+          {current.dateFrom    && <FilterBadge label={`From: ${current.dateFrom}`}    onRemove={() => update('dateFrom',    '')} />}
+          {current.dateTo      && <FilterBadge label={`To: ${current.dateTo}`}        onRemove={() => update('dateTo',      '')} />}
+          {current.device      && <FilterBadge label={`Device: ${current.device}`}    onRemove={() => update('device',      '')} />}
+          {current.os          && <FilterBadge label={`OS: ${current.os}`}            onRemove={() => update('os',          '')} />}
+          {current.browser     && <FilterBadge label={`Browser: ${current.browser}`}  onRemove={() => update('browser',     '')} />}
+          {current.minDuration && <FilterBadge label={`Min: ${current.minDuration}s`} onRemove={() => update('minDuration', '')} />}
+          {current.rageClick   && <FilterBadge label="Rage clicks"                    onRemove={() => update('rageClick',   '')} />}
         </div>
       )}
     </div>

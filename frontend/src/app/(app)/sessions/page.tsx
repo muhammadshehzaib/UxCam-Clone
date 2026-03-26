@@ -9,9 +9,11 @@ interface Props {
     page?: string;
     device?: string;
     os?: string;
+    browser?: string;
     dateFrom?: string;
     dateTo?: string;
     minDuration?: string;
+    rageClick?: string;
   }>;
 }
 
@@ -25,19 +27,21 @@ export default async function SessionsPage({ searchParams }: Props) {
   try {
     result = await getSessions({
       page,
-      limit: 20,
+      limit:       20,
       device:      params.device,
       os:          params.os,
+      browser:     params.browser,
       dateFrom:    params.dateFrom,
       dateTo:      params.dateTo,
       minDuration: params.minDuration,
+      rageClick:   params.rageClick === 'true' ? true : undefined,
     });
   } catch {
     // API not available
   }
 
-  const sessions = result?.data ?? [];
-  const total = result?.meta.total ?? 0;
+  const sessions   = result?.data ?? [];
+  const total      = result?.meta.total ?? 0;
   const totalPages = Math.ceil(total / 20);
 
   return (

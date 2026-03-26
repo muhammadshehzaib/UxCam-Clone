@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { BarChart2, Users, PlaySquare, Home, Flame, GitBranch, Bug, LogOut, Workflow } from 'lucide-react';
+import { BarChart2, Users, PlaySquare, Home, Flame, GitBranch, Bug, LogOut, Workflow, Sliders } from 'lucide-react';
 import { clearToken } from '@/lib/auth';
 import ProjectSwitcher from './ProjectSwitcher';
 
