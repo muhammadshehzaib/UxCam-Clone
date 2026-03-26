@@ -33,3 +33,5 @@ export const LogIn = Icon;
 export const LogOut = Icon;
 export const FolderOpen = Icon;
 export const Check = Icon;
+export const Workflow = Icon;
+export const ArrowRight = Icon;

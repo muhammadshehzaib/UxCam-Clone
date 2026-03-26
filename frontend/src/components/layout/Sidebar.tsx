@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { BarChart2, Users, PlaySquare, Home, Flame, GitBranch, Bug, LogOut } from 'lucide-react';
+import { BarChart2, Users, PlaySquare, Home, Flame, GitBranch, Bug, LogOut, Workflow } from 'lucide-react';
 import { clearToken } from '@/lib/auth';
 import ProjectSwitcher from './ProjectSwitcher';
 
@@ -11,8 +11,9 @@ const navItems = [
   { href: '/sessions',  label: 'Sessions',  icon: PlaySquare },
   { href: '/users',     label: 'Users',     icon: Users },
   { href: '/heatmaps',  label: 'Heatmaps',  icon: Flame },
-  { href: '/funnels',   label: 'Funnels',   icon: GitBranch },
-  { href: '/crashes',   label: 'Crashes',   icon: Bug },
+  { href: '/funnels',   label: 'Funnels',      icon: GitBranch },
+  { href: '/flow',      label: 'Screen Flow',  icon: Workflow },
+  { href: '/crashes',   label: 'Crashes',      icon: Bug },
   { href: '/analytics', label: 'Analytics', icon: BarChart2 },
 ];
 

@@ -123,3 +123,22 @@ export interface CrashSession {
   os: string | null;
   crash_elapsed_ms: number;
 }
+
+export interface ScreenFlowEdge {
+  from_screen:      string;
+  to_screen:        string;
+  transition_count: number;
+}
+
+export interface ScreenFlowNode {
+  screen:       string;
+  total_visits: number;
+  entry_count:  number;
+  exit_count:   number;
+}
+
+export interface ScreenFlowData {
+  edges:             ScreenFlowEdge[];
+  nodes:             ScreenFlowNode[];
+  total_transitions: number;
+}

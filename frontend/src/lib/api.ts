@@ -10,6 +10,7 @@ import {
   CrashGroup,
   CrashSession,
   Project,
+  ScreenFlowData,
   PaginatedResponse,
 } from '@/types';
 
@@ -109,6 +110,11 @@ export async function getUserSessions(userId: string, params?: {
   const qs = new URLSearchParams();
   if (params?.page) qs.set('page', String(params.page));
   return apiFetch<PaginatedResponse<Session>>(`/users/${userId}/sessions?${qs}`);
+}
+
+export async function getScreenFlow(days = 30): Promise<ScreenFlowData> {
+  const res = await apiFetch<{ data: ScreenFlowData }>(`/analytics/screen-flow?days=${days}`);
+  return res.data;
 }
 
 export async function getHeatmap(screen: string, days = 30): Promise<HeatmapPoint[]> {
