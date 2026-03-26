@@ -11,6 +11,8 @@ import {
   CrashSession,
   Project,
   ScreenFlowData,
+  Segment,
+  SegmentFilters,
   PaginatedResponse,
 } from '@/types';
 
@@ -62,19 +64,23 @@ export async function getSessions(params?: {
   userId?: string;
   device?: string;
   os?: string;
+  browser?: string;
   dateFrom?: string;
   dateTo?: string;
   minDuration?: string; // seconds as string
+  rageClick?: boolean;
 }): Promise<PaginatedResponse<Session>> {
   const qs = new URLSearchParams();
-  if (params?.page) qs.set('page', String(params.page));
-  if (params?.limit) qs.set('limit', String(params.limit));
-  if (params?.userId) qs.set('userId', params.userId);
-  if (params?.device) qs.set('device', params.device);
-  if (params?.os) qs.set('os', params.os);
-  if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
-  if (params?.dateTo) qs.set('dateTo', params.dateTo);
+  if (params?.page)        qs.set('page',        String(params.page));
+  if (params?.limit)       qs.set('limit',       String(params.limit));
+  if (params?.userId)      qs.set('userId',      params.userId);
+  if (params?.device)      qs.set('device',      params.device);
+  if (params?.os)          qs.set('os',          params.os);
+  if (params?.browser)     qs.set('browser',     params.browser);
+  if (params?.dateFrom)    qs.set('dateFrom',    params.dateFrom);
+  if (params?.dateTo)      qs.set('dateTo',      params.dateTo);
   if (params?.minDuration) qs.set('minDuration', params.minDuration);
+  if (params?.rageClick)   qs.set('rageClick',   'true');
 
   return apiFetch<PaginatedResponse<Session>>(`/sessions?${qs}`);
 }
@@ -204,6 +210,31 @@ export async function switchProject(projectId: string): Promise<{ token: string;
     { method: 'POST' }
   );
   return res.data;
+}
+
+export async function getSegments(): Promise<Segment[]> {
+  const res = await apiFetch<{ data: Segment[] }>('/segments');
+  return res.data;
+}
+
+export async function createSegment(name: string, filters: SegmentFilters): Promise<Segment> {
+  const res = await apiFetch<{ data: Segment }>('/segments', {
+    method: 'POST',
+    body: JSON.stringify({ name, filters }),
+  });
+  return res.data;
+}
+
+export async function updateSegment(id: string, name: string, filters: SegmentFilters): Promise<Segment> {
+  const res = await apiFetch<{ data: Segment }>(`/segments/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ name, filters }),
+  });
+  return res.data;
+}
+
+export async function deleteSegment(id: string): Promise<void> {
+  await apiFetch(`/segments/${id}`, { method: 'DELETE' });
 }
 
 export async function authRegister(

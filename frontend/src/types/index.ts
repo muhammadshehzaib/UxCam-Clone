@@ -142,3 +142,19 @@ export interface ScreenFlowData {
   nodes:             ScreenFlowNode[];
   total_transitions: number;
 }
+
+export interface SegmentFilters {
+  device?:      string;
+  os?:          string;
+  browser?:     string;
+  minDuration?: number;   // seconds
+  rageClick?:   boolean;
+}
+
+export interface Segment {
+  id:         string;
+  project_id: string;
+  name:       string;
+  filters:    SegmentFilters;
+  created_at: string;
+}
