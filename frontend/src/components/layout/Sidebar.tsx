@@ -12,6 +12,7 @@ const navItems = [
   { href: '/users',     label: 'Users',     icon: Users },
   { href: '/heatmaps',  label: 'Heatmaps',  icon: Flame },
   { href: '/funnels',   label: 'Funnels',      icon: GitBranch },
+  { href: '/segments',  label: 'Segments',     icon: Sliders },
   { href: '/flow',      label: 'Screen Flow',  icon: Workflow },
   { href: '/crashes',   label: 'Crashes',      icon: Bug },
   { href: '/analytics', label: 'Analytics', icon: BarChart2 },

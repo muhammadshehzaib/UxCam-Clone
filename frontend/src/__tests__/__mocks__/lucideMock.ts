@@ -35,3 +35,6 @@ export const FolderOpen = Icon;
 export const Check = Icon;
 export const Workflow = Icon;
 export const ArrowRight = Icon;
+export const Sliders = Icon;
+export const BookmarkCheck = Icon;
+export const Tag = Icon;
