@@ -3,6 +3,7 @@ import {
   SessionEvent,
   AppUser,
   AnalyticsSummary,
+  HeatmapPoint,
   PaginatedResponse,
 } from '@/types';
 
@@ -93,4 +94,15 @@ export async function getUserSessions(userId: string, params?: {
   const qs = new URLSearchParams();
   if (params?.page) qs.set('page', String(params.page));
   return apiFetch<PaginatedResponse<Session>>(`/users/${userId}/sessions?${qs}`);
+}
+
+export async function getHeatmap(screen: string, days = 30): Promise<HeatmapPoint[]> {
+  const qs = new URLSearchParams({ screen, days: String(days) });
+  const res = await apiFetch<{ data: HeatmapPoint[] }>(`/analytics/heatmap?${qs}`);
+  return res.data;
+}
+
+export async function getHeatmapScreens(days = 30): Promise<string[]> {
+  const res = await apiFetch<{ data: string[] }>(`/analytics/screens?days=${days}`);
+  return res.data;
 }

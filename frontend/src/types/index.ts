@@ -55,3 +55,9 @@ export interface PaginatedResponse<T> {
   data: T[];
   meta: { page: number; limit: number; total: number };
 }
+
+export interface HeatmapPoint {
+  x: number;   // normalized 0–1
+  y: number;   // normalized 0–1
+  count: number;
+}
