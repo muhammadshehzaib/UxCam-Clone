@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { createSegment } from '@/lib/api';
-import { SegmentFilters } from '@/types';
+import { SegmentFilters, TAG_OPTIONS } from '@/types';
 import { Sliders } from 'lucide-react';
 
 const DEVICES  = ['mobile', 'tablet', 'desktop'];
@@ -21,6 +21,7 @@ export default function SegmentBuilder({ onCreated, initialFilters }: SegmentBui
   const [browser,     setBrowser]     = useState(initialFilters?.browser     ?? '');
   const [minDuration, setMinDuration] = useState(initialFilters?.minDuration ? String(initialFilters.minDuration) : '');
   const [rageClick,   setRageClick]   = useState(initialFilters?.rageClick   ?? false);
+  const [activeTags,  setActiveTags]  = useState<string[]>(initialFilters?.tags ?? []);
   const [saving,      setSaving]      = useState(false);
   const [error,       setError]       = useState<string | null>(null);
 
@@ -30,7 +31,8 @@ export default function SegmentBuilder({ onCreated, initialFilters }: SegmentBui
     if (os)                f.os          = os;
     if (browser)           f.browser     = browser;
     if (minDuration)       f.minDuration = parseInt(minDuration, 10);
-    if (rageClick)         f.rageClick   = true;
+    if (rageClick)           f.rageClick   = true;
+    if (activeTags.length)   f.tags        = activeTags;
     return f;
   }
 
@@ -46,7 +48,7 @@ export default function SegmentBuilder({ onCreated, initialFilters }: SegmentBui
     try {
       await createSegment(name.trim(), filters);
       // Reset form
-      setName(''); setDevice(''); setOs(''); setBrowser(''); setMinDuration(''); setRageClick(false);
+      setName(''); setDevice(''); setOs(''); setBrowser(''); setMinDuration(''); setRageClick(false); setActiveTags([]);
       onCreated();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save segment');

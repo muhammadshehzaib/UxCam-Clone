@@ -161,6 +161,7 @@ export interface SegmentFilters {
   browser?:     string;
   minDuration?: number;   // seconds
   rageClick?:   boolean;
+  tags?:        string[]; // session tag ids e.g. ['bug', 'important']
 }
 
 export interface Segment {

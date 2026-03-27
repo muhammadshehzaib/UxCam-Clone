@@ -6,6 +6,7 @@ export interface SegmentFilters {
   browser?:     string;
   minDuration?: number;   // seconds
   rageClick?:   boolean;
+  tags?:        string[]; // session tag ids e.g. ['bug', 'important']
 }
 
 export interface Segment {
@@ -18,7 +19,7 @@ export interface Segment {
 
 // Only these keys may be stored — dateFrom/dateTo are dynamic, not saved
 const ALLOWED_FILTER_KEYS: (keyof SegmentFilters)[] = [
-  'device', 'os', 'browser', 'minDuration', 'rageClick',
+  'device', 'os', 'browser', 'minDuration', 'rageClick', 'tags',
 ];
 
 function sanitizeFilters(raw: Record<string, unknown>): SegmentFilters {
