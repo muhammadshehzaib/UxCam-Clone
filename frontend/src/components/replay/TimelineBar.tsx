@@ -5,11 +5,12 @@ import { SessionEvent } from '@/types';
 import { EVENT_COLORS } from '@/lib/utils';
 
 interface TimelineBarProps {
-  events: SessionEvent[];
-  durationMs: number;
-  currentTimeMs: number;
-  onSeek: (ms: number) => void;
-  rageTimestamps?: number[];
+  events:           SessionEvent[];
+  durationMs:       number;
+  currentTimeMs:    number;
+  onSeek:           (ms: number) => void;
+  rageTimestamps?:  number[];
+  freezeTimestamps?: number[];
 }
 
 export default function TimelineBar({
@@ -17,7 +18,8 @@ export default function TimelineBar({
   durationMs,
   currentTimeMs,
   onSeek,
-  rageTimestamps = [],
+  rageTimestamps  = [],
+  freezeTimestamps = [],
 }: TimelineBarProps) {
   const barRef = useRef<HTMLDivElement>(null);
 
@@ -33,7 +35,7 @@ export default function TimelineBar({
   }
 
   function handleMouseMove(e: React.MouseEvent) {
-    if (e.buttons !== 1) return; // Only drag when mouse button held
+    if (e.buttons !== 1) return;
     onSeek(getTimeFromPointer(e.clientX));
   }
 
@@ -66,13 +68,32 @@ export default function TimelineBar({
             key={i}
             className="absolute w-1.5 h-1.5 rounded-full -translate-x-1/2"
             style={{
-              left: `${pct}%`,
+              left:            `${pct}%`,
               backgroundColor: EVENT_COLORS[ev.type] ?? '#94a3b8',
-              top: '50%',
-              marginTop: -3,
+              top:             '50%',
+              marginTop:       -3,
             }}
             title={`${ev.type} at ${(ev.elapsed_ms / 1000).toFixed(1)}s${ev.screen_name ? ` · ${ev.screen_name}` : ''}`}
           />
+        );
+      })}
+
+      {/* Freeze markers — orange bars above the track */}
+      {freezeTimestamps.map((ms, i) => {
+        const pct = durationMs > 0 ? (ms / durationMs) * 100 : 0;
+        return (
+          <div
+            key={`freeze-${i}`}
+            data-testid="freeze-marker"
+            className="absolute -translate-x-1/2 z-20"
+            style={{ left: `${pct}%`, top: '50%', marginTop: -8 }}
+            title={`UI freeze at ${(ms / 1000).toFixed(1)}s`}
+          >
+            <div
+              className="w-1.5 h-4 rounded-sm"
+              style={{ backgroundColor: EVENT_COLORS.freeze }}
+            />
+          </div>
         );
       })}
 
@@ -87,7 +108,6 @@ export default function TimelineBar({
             style={{ left: `${pct}%`, top: '50%', marginTop: -10 }}
             title={`Rage click at ${(ms / 1000).toFixed(1)}s`}
           >
-            {/* Diamond shape via rotation */}
             <div
               className="w-3 h-3 rotate-45"
               style={{ backgroundColor: EVENT_COLORS.rage_click }}

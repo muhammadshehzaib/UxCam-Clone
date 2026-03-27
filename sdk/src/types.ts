@@ -5,7 +5,8 @@ export type EventType =
   | 'navigate'
   | 'screen_view'
   | 'custom'
-  | 'crash';
+  | 'crash'
+  | 'freeze';
 
 export interface SDKEvent {
   type: EventType;

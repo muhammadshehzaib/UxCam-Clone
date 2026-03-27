@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { Session, SessionEvent } from '@/types';
 import { useReplayEngine } from './useReplayEngine';
 import { detectRageClickTimestamps } from '@/lib/rageClickDetector';
+import { detectFreezeTimestamps } from '@/lib/freezeDetector';
 import ReplayCanvas from './ReplayCanvas';
 import TimelineBar from './TimelineBar';
 import PlaybackControls from './PlaybackControls';
@@ -21,7 +22,8 @@ export default function ReplayViewerClient({ session, events, initialSeekMs }: R
   const { currentTimeMs, isPlaying, speed, activeEventIndex, play, pause, seek, setSpeed } =
     useReplayEngine(events, durationMs);
 
-  const rageTimestamps = detectRageClickTimestamps(events);
+  const rageTimestamps   = detectRageClickTimestamps(events);
+  const freezeTimestamps = detectFreezeTimestamps(events);
 
   // Jump to crash / deep-link position on first render
   useEffect(() => {
@@ -97,6 +99,7 @@ export default function ReplayViewerClient({ session, events, initialSeekMs }: R
           currentTimeMs={currentTimeMs}
           onSeek={seek}
           rageTimestamps={rageTimestamps}
+          freezeTimestamps={freezeTimestamps}
         />
         <PlaybackControls
           isPlaying={isPlaying}

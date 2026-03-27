@@ -3,11 +3,13 @@ import { SessionManager } from './session';
 import { Transport } from './transport';
 import { attachRecorder } from './recorder';
 import { attachErrorRecorder } from './errorRecorder';
+import { attachFreezeRecorder } from './freezeRecorder';
 
 let session: SessionManager | null = null;
 let transport: Transport | null = null;
 let detachRecorder: (() => void) | null = null;
 let detachErrorRecorder: (() => void) | null = null;
+let detachFreezeRecorder: (() => void) | null = null;
 let currentScreen = '/';
 
 function assertInitialized(): void {
@@ -40,6 +42,15 @@ export const UXClone = {
     detachErrorRecorder = attachErrorRecorder(
       (event: SDKEvent) => {
         session!.touch();
+        transport!.push(event);
+      },
+      () => session!.getElapsedMs(),
+      () => currentScreen
+    );
+
+    // Attach freeze recorder — detects main thread blocks ≥500ms
+    detachFreezeRecorder = attachFreezeRecorder(
+      (event: SDKEvent) => {
         transport!.push(event);
       },
       () => session!.getElapsedMs(),
@@ -136,10 +147,12 @@ export const UXClone = {
     transport?.flushSync();
     detachRecorder?.();
     detachErrorRecorder?.();
+    detachFreezeRecorder?.();
     session = null;
     transport = null;
     detachRecorder = null;
     detachErrorRecorder = null;
+    detachFreezeRecorder = null;
   },
 };
 
