@@ -1,4 +1,5 @@
 import { db } from '../db/client';
+import { fireWebhooks } from './webhookService';
 
 export interface RageClickCluster {
   elapsed_ms: number;
@@ -106,4 +107,11 @@ export async function analyzeAndStoreRageClicks(
       projectId,
     ]
   );
+
+  // Fire rage_click.session webhook (fire-and-forget)
+  fireWebhooks(projectId, 'rage_click.session', {
+    session_id:  sessionId,
+    rage_clicks: totalCount,
+    timestamps,
+  }).catch((err) => console.error('rage_click webhook failed:', err));
 }

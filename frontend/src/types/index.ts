@@ -193,6 +193,19 @@ export interface RetentionData {
   cohorts: RetentionCohort[];
 }
 
+export type WebhookEventType = 'crash.new' | 'rage_click.session' | 'freeze.session';
+
+export interface Webhook {
+  id:         string;
+  project_id: string;
+  name:       string;
+  url:        string;
+  events:     WebhookEventType[];
+  secret:     string | null;
+  enabled:    boolean;
+  created_at: string;
+}
+
 export interface NetworkFailure {
   elapsed_ms:  number;
   url:         string;

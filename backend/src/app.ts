@@ -13,6 +13,7 @@ import segmentsRouter from './routes/segments';
 import teamRouter from './routes/team';
 import invitesRouter from './routes/invites';
 import bookmarksRouter from './routes/bookmarks';
+import webhooksRouter from './routes/webhooks';
 
 const app = express();
 
@@ -33,5 +34,6 @@ app.use('/api/v1/segments', segmentsRouter);
 app.use('/api/v1/projects/:id', teamRouter);
 app.use('/api/v1/invites',      invitesRouter);
 app.use('/api/v1/bookmarks',    bookmarksRouter);
+app.use('/api/v1/webhooks',     webhooksRouter);
 
 export default app;
