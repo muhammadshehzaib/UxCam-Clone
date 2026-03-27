@@ -55,6 +55,11 @@ export default async function SettingsPage() {
     }
   } catch { /* ignore */ }
 
+  let webhooks: import('@/types').Webhook[] = [];
+  try {
+    if (projectId) webhooks = await getWebhooks();
+  } catch { /* ignore */ }
+
   return (
     <div>
       {/* Header */}
@@ -86,6 +91,14 @@ export default async function SettingsPage() {
             <ApiKeyCard projectId={projectId} initialKey={apiKey} />
           </div>
         )}
+
+        {/* Webhooks */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-6">
+          <WebhooksList webhooks={webhooks} />
+          <div className="border-t border-slate-100 pt-6">
+            <WebhookForm projectId={projectId} />
+          </div>
+        </div>
       </div>
     </div>
   );
