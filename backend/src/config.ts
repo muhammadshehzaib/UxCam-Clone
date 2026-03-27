@@ -6,5 +6,6 @@ export const config = {
   redisUrl: process.env.REDIS_URL ?? 'redis://localhost:6379',
   dashboardJwtSecret: process.env.DASHBOARD_JWT_SECRET ?? 'dev-secret',
   dashboardToken: process.env.DASHBOARD_TOKEN ?? 'dev-dashboard-token',
-  isDev: process.env.NODE_ENV !== 'production',
+  isDev:      process.env.NODE_ENV !== 'production',
+  cronSecret: process.env.CRON_SECRET ?? '',
 };

@@ -36,5 +36,6 @@ app.use('/api/v1/projects/:id', teamRouter);
 app.use('/api/v1/invites',      invitesRouter);
 app.use('/api/v1/bookmarks',    bookmarksRouter);
 app.use('/api/v1/webhooks',     webhooksRouter);
+app.use('/api/v1/reports',      reportsRouter);
 
 export default app;
