@@ -1,6 +1,7 @@
 import { Session } from '@/types';
 import { formatDateTime, formatMs, getDeviceIcon } from '@/lib/utils';
 import SessionNoteEditor from './SessionNoteEditor';
+import BookmarkButton from '@/components/sessions/BookmarkButton';
 
 interface SessionInfoPanelProps {
   session: Session;
@@ -18,9 +19,12 @@ function InfoRow({ label, value }: { label: string; value: string | number | nul
 export default function SessionInfoPanel({ session }: SessionInfoPanelProps) {
   return (
     <div className="bg-slate-50 rounded-xl border border-slate-200 p-5">
-      <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-4">
-        Session Info
-      </h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+          Session Info
+        </h3>
+        <BookmarkButton sessionId={session.id} bookmarked={session.is_bookmarked ?? false} size={16} />
+      </div>
       <dl className="space-y-3">
         <InfoRow label="Session ID" value={session.id.slice(0, 8) + '…'} />
         <InfoRow label="User" value={session.external_id ?? session.anonymous_id.slice(0, 12) + '…'} />

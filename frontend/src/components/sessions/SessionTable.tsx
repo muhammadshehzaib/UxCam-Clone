@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Session, TAG_OPTIONS } from '@/types';
 import { formatMs, formatDateTime, truncate, getDeviceIcon } from '@/lib/utils';
 import { Play } from 'lucide-react';
+import BookmarkButton from './BookmarkButton';
 
 interface SessionTableProps {
   sessions:  Session[];
@@ -81,13 +82,16 @@ export default function SessionTable({ sessions, fromPath }: SessionTableProps) 
                 </div>
               </td>
               <td className="px-4 py-3">
-                <Link
-                  href={sessionHref(s.id)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-50 text-brand-600 hover:bg-brand-100 rounded-lg text-xs font-medium transition-colors"
-                >
-                  <Play size={12} />
-                  Replay
-                </Link>
+                <div className="flex items-center gap-1">
+                  <BookmarkButton sessionId={s.id} bookmarked={s.is_bookmarked ?? false} />
+                  <Link
+                    href={sessionHref(s.id)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-50 text-brand-600 hover:bg-brand-100 rounded-lg text-xs font-medium transition-colors"
+                  >
+                    <Play size={12} />
+                    Replay
+                  </Link>
+                </div>
               </td>
             </tr>
           ))}

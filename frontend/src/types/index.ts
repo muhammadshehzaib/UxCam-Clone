@@ -35,9 +35,10 @@ export interface Session {
   screen_width: number | null;
   screen_height: number | null;
   event_count: number;
-  metadata: SessionMetadata | null;
-  external_id: string | null;
-  traits: Record<string, unknown> | null;
+  metadata:     SessionMetadata | null;
+  external_id:  string | null;
+  traits:       Record<string, unknown> | null;
+  is_bookmarked?: boolean;
 }
 
 export interface SessionEvent {

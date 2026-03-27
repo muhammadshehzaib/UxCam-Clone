@@ -98,6 +98,18 @@ export async function getSession(id: string): Promise<Session> {
   return res.data;
 }
 
+export async function toggleBookmark(sessionId: string): Promise<{ bookmarked: boolean }> {
+  const res = await apiFetch<{ data: { bookmarked: boolean } }>(`/sessions/${sessionId}/bookmark`, {
+    method: 'POST',
+  });
+  return res.data;
+}
+
+export async function getBookmarks(): Promise<Session[]> {
+  const res = await apiFetch<{ data: Session[] }>('/bookmarks');
+  return res.data;
+}
+
 export async function getSessionEvents(sessionId: string): Promise<SessionEvent[]> {
   const res = await apiFetch<{ data: SessionEvent[] }>(`/sessions/${sessionId}/events`);
   return res.data;
