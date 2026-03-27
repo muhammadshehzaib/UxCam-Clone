@@ -6,6 +6,7 @@ import { useReplayEngine } from './useReplayEngine';
 import { detectRageClickTimestamps } from '@/lib/rageClickDetector';
 import { detectFreezeTimestamps } from '@/lib/freezeDetector';
 import { detectNetworkFailures } from '@/lib/networkDetector';
+import { EVENT_COLORS } from '@/lib/utils';
 import ReplayCanvas from './ReplayCanvas';
 import TimelineBar from './TimelineBar';
 import PlaybackControls from './PlaybackControls';
@@ -81,10 +82,13 @@ export default function ReplayViewerClient({ session, events, initialSeekMs }: R
                   >
                     <span
                       className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: i === 0 ? '#6366f1' : '#cbd5e1' }}
+                      style={{ backgroundColor: EVENT_COLORS[ev.type] ?? (i === 0 ? '#6366f1' : '#cbd5e1') }}
                     />
                     <span className="font-mono">{(ev.elapsed_ms / 1000).toFixed(1)}s</span>
                     <span className="font-medium capitalize">{ev.type}</span>
+                    {ev.type === 'network' && ev.value && (
+                      <span className="text-red-500 font-mono text-xs">→ {ev.value}</span>
+                    )}
                     {ev.screen_name && (
                       <span className="text-slate-400 truncate">{ev.screen_name}</span>
                     )}
