@@ -98,6 +98,28 @@ export async function getCustomEventTimeline(projectId: string, eventName: strin
   return result.rows.map((r) => ({ date: r.date as string, count: parseInt(r.count, 10) }));
 }
 
+export async function getFeedbackSubmissions(projectId: string, days: number) {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const result = await db.query(
+    `SELECT e.session_id, e.elapsed_ms, e.screen_name,
+            e.timestamp AS submitted_at,
+            e.metadata->>'message' AS message,
+            (e.metadata->>'rating')::int AS rating,
+            u.external_id AS user_email
+     FROM events e
+     JOIN sessions s ON s.id = e.session_id
+     LEFT JOIN app_users u ON u.id = s.user_id
+     WHERE e.project_id = $1
+       AND e.type = 'custom'
+       AND e.value = '__feedback__'
+       AND e.timestamp >= $2
+     ORDER BY e.timestamp DESC
+     LIMIT 100`,
+    [projectId, since]
+  );
+  return result.rows;
+}
+
 export async function getSessionsOverTime(projectId: string, days: number) {
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 

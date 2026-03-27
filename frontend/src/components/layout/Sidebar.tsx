@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Users, PlaySquare, Home, Flame, GitBranch, Bug, LogOut, Workflow, Sliders, TrendingUp, Settings, Activity, Bookmark } from 'lucide-react';
+import { Users, PlaySquare, Home, Flame, GitBranch, Bug, LogOut, Workflow, Sliders, TrendingUp, Settings, Activity, Bookmark, MessageSquare } from 'lucide-react';
 import { clearToken } from '@/lib/auth';
 import ProjectSwitcher from './ProjectSwitcher';
 
@@ -18,6 +18,7 @@ const navItems = [
   { href: '/events',    label: 'Events',       icon: Activity },
   { href: '/flow',      label: 'Screen Flow',  icon: Workflow },
   { href: '/crashes',   label: 'Crashes',      icon: Bug },
+  { href: '/feedback',  label: 'Feedback',     icon: MessageSquare },
   { href: '/settings',  label: 'Settings',     icon: Settings },
 ];
 

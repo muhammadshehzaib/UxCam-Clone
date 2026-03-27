@@ -19,6 +19,7 @@ router.get('/crashes/sessions',   crashController.getCrashSessions);
 router.get('/screen-flow',        screenFlowController.getScreenFlow);
 router.get('/retention',                        retentionController.getRetention);
 router.get('/custom-events',                    analyticsController.getCustomEvents);
+router.get('/feedback',                         analyticsController.getFeedbackSubmissions);
 router.get('/custom-events/:name/timeline',     analyticsController.getCustomEventTimeline);
 
 export default router;

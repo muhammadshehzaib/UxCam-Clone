@@ -55,5 +55,6 @@ export const EVENT_COLORS: Record<string, string> = {
   screen_view: '#14B8A6',
   rage_click: '#EF4444',
   freeze:     '#EA580C',
-  network:    '#DC2626',
+  network:      '#DC2626',
+  __feedback__: '#10b981',
 };

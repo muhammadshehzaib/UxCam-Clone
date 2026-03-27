@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 import { SessionEvent, NetworkFailure } from '@/types';
 import { EVENT_COLORS } from '@/lib/utils';
+import type { FeedbackEvent } from '@/lib/feedbackDetector';
 
 interface TimelineBarProps {
   events:            SessionEvent[];
@@ -11,7 +12,8 @@ interface TimelineBarProps {
   onSeek:            (ms: number) => void;
   rageTimestamps?:   number[];
   freezeTimestamps?: number[];
-  networkFailures?:  NetworkFailure[];
+  networkFailures?:   NetworkFailure[];
+  feedbackEvents?:    FeedbackEvent[];
 }
 
 export default function TimelineBar({
@@ -22,6 +24,7 @@ export default function TimelineBar({
   rageTimestamps   = [],
   freezeTimestamps = [],
   networkFailures  = [],
+  feedbackEvents   = [],
 }: TimelineBarProps) {
   const barRef = useRef<HTMLDivElement>(null);
 
@@ -133,6 +136,27 @@ export default function TimelineBar({
               className="w-3 h-3 rotate-45"
               style={{ backgroundColor: EVENT_COLORS.rage_click }}
             />
+          </div>
+        );
+      })}
+
+      {/* Feedback markers — emerald speech bubbles above the track */}
+      {(feedbackEvents as FeedbackEvent[]).map((fb, i) => {
+        const pct = durationMs > 0 ? (fb.elapsed_ms / durationMs) * 100 : 0;
+        return (
+          <div
+            key={`fb-${i}`}
+            data-testid="feedback-marker"
+            className="absolute -translate-x-1/2 z-20"
+            style={{ left: `${pct}%`, top: '50%', marginTop: -12 }}
+            title={`Feedback: "${fb.message.slice(0, 60)}" at ${(fb.elapsed_ms / 1000).toFixed(1)}s`}
+          >
+            <div
+              className="w-3 h-3 rounded-full flex items-center justify-center text-white"
+              style={{ backgroundColor: EVENT_COLORS.__feedback__, fontSize: 8 }}
+            >
+              ✉
+            </div>
           </div>
         );
       })}

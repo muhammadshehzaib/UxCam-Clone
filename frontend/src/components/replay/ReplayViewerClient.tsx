@@ -6,6 +6,7 @@ import { useReplayEngine } from './useReplayEngine';
 import { detectRageClickTimestamps } from '@/lib/rageClickDetector';
 import { detectFreezeTimestamps } from '@/lib/freezeDetector';
 import { detectNetworkFailures } from '@/lib/networkDetector';
+import { detectFeedbackEvents } from '@/lib/feedbackDetector';
 import { EVENT_COLORS } from '@/lib/utils';
 import ReplayCanvas from './ReplayCanvas';
 import TimelineBar from './TimelineBar';
@@ -27,6 +28,7 @@ export default function ReplayViewerClient({ session, events, initialSeekMs }: R
   const rageTimestamps   = detectRageClickTimestamps(events);
   const freezeTimestamps = detectFreezeTimestamps(events);
   const networkFailures  = detectNetworkFailures(events);
+  const feedbackEvents   = detectFeedbackEvents(events);
 
   // Jump to crash / deep-link position on first render
   useEffect(() => {
@@ -109,6 +111,7 @@ export default function ReplayViewerClient({ session, events, initialSeekMs }: R
           rageTimestamps={rageTimestamps}
           freezeTimestamps={freezeTimestamps}
           networkFailures={networkFailures}
+          feedbackEvents={feedbackEvents}
         />
         <PlaybackControls
           isPlaying={isPlaying}

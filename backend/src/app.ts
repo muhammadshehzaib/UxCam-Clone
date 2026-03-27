@@ -14,6 +14,7 @@ import teamRouter from './routes/team';
 import invitesRouter from './routes/invites';
 import bookmarksRouter from './routes/bookmarks';
 import webhooksRouter from './routes/webhooks';
+import reportsRouter from './routes/reports';
 
 const app = express();
 

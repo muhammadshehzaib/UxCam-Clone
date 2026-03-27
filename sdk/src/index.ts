@@ -5,6 +5,7 @@ import { attachRecorder } from './recorder';
 import { attachErrorRecorder } from './errorRecorder';
 import { attachFreezeRecorder } from './freezeRecorder';
 import { attachNetworkRecorder } from './networkRecorder';
+import { submitFeedback, attachFeedbackWidget } from './feedbackWidget';
 
 let session: SessionManager | null = null;
 let transport: Transport | null = null;
@@ -12,6 +13,7 @@ let detachRecorder: (() => void) | null = null;
 let detachErrorRecorder: (() => void) | null = null;
 let detachFreezeRecorder: (() => void) | null = null;
 let detachNetworkRecorder: (() => void) | null = null;
+let detachFeedbackWidget: (() => void) | null = null;
 let currentScreen = '/';
 
 function assertInitialized(): void {
@@ -144,6 +146,34 @@ export const UXClone = {
   },
 
   /**
+   * Submit user feedback attached to the active session replay.
+   */
+  feedback(message: string, rating?: number): void {
+    assertInitialized();
+    submitFeedback(
+      (event: SDKEvent) => transport!.push(event),
+      () => session!.getElapsedMs(),
+      () => currentScreen,
+      message,
+      rating
+    );
+  },
+
+  /**
+   * Inject a floating feedback button into the page.
+   */
+  enableFeedbackWidget(options?: { position?: 'bottom-right' | 'bottom-left'; label?: string }): void {
+    assertInitialized();
+    if (detachFeedbackWidget) detachFeedbackWidget(); // remove existing if any
+    detachFeedbackWidget = attachFeedbackWidget(
+      (event: SDKEvent) => transport!.push(event),
+      () => session!.getElapsedMs(),
+      () => currentScreen,
+      options
+    );
+  },
+
+  /**
    * Manually flush all queued events.
    */
   flush(): Promise<void> {
@@ -161,12 +191,14 @@ export const UXClone = {
     detachErrorRecorder?.();
     detachFreezeRecorder?.();
     detachNetworkRecorder?.();
+    detachFeedbackWidget?.();
     session = null;
     transport = null;
     detachRecorder = null;
     detachErrorRecorder = null;
     detachFreezeRecorder = null;
     detachNetworkRecorder = null;
+    detachFeedbackWidget = null;
   },
 };
 
