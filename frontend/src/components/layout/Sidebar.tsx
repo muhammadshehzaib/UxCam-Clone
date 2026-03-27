@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Users, PlaySquare, Home, Flame, GitBranch, Bug, LogOut, Workflow, Sliders } from 'lucide-react';
+import { Users, PlaySquare, Home, Flame, GitBranch, Bug, LogOut, Workflow, Sliders, TrendingUp } from 'lucide-react';
 import { clearToken } from '@/lib/auth';
 import ProjectSwitcher from './ProjectSwitcher';
 
@@ -13,8 +13,9 @@ const navItems = [
   { href: '/heatmaps',  label: 'Heatmaps',  icon: Flame },
   { href: '/funnels',   label: 'Funnels',      icon: GitBranch },
   { href: '/segments',  label: 'Segments',     icon: Sliders },
-  { href: '/flow',    label: 'Screen Flow', icon: Workflow },
-  { href: '/crashes', label: 'Crashes',     icon: Bug },
+  { href: '/retention', label: 'Retention',    icon: TrendingUp },
+  { href: '/flow',      label: 'Screen Flow',  icon: Workflow },
+  { href: '/crashes',   label: 'Crashes',      icon: Bug },
 ];
 
 export default function Sidebar() {

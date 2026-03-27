@@ -158,3 +158,23 @@ export interface Segment {
   filters:    SegmentFilters;
   created_at: string;
 }
+
+export interface RetentionSummary {
+  total_users: number;
+  d1_pct:      number;
+  d7_pct:      number;
+  d30_pct:     number;
+}
+
+export interface RetentionCohort {
+  cohort_week: string;
+  total:       number;
+  d1_pct:      number;
+  d7_pct:      number;
+  d30_pct:     number;
+}
+
+export interface RetentionData {
+  summary: RetentionSummary;
+  cohorts: RetentionCohort[];
+}

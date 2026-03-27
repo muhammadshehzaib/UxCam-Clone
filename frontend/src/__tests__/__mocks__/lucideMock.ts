@@ -38,3 +38,4 @@ export const ArrowRight = Icon;
 export const Sliders = Icon;
 export const BookmarkCheck = Icon;
 export const Tag = Icon;
+export const TrendingUp = Icon;

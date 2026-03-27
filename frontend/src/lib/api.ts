@@ -13,6 +13,7 @@ import {
   ScreenFlowData,
   Segment,
   SegmentFilters,
+  RetentionData,
   PaginatedResponse,
 } from '@/types';
 
@@ -130,6 +131,11 @@ export async function getUserSessions(userId: string, params?: {
 
 export async function getScreenFlow(days = 30): Promise<ScreenFlowData> {
   const res = await apiFetch<{ data: ScreenFlowData }>(`/analytics/screen-flow?days=${days}`);
+  return res.data;
+}
+
+export async function getRetention(days = 90): Promise<RetentionData> {
+  const res = await apiFetch<{ data: RetentionData }>(`/analytics/retention?days=${days}`);
   return res.data;
 }
 
