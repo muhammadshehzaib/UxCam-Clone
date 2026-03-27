@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { getCrashGroups, getCrashSessions } from '@/lib/api';
 import { CrashGroup, CrashSession } from '@/types';
 import CrashList from '@/components/crashes/CrashList';
@@ -8,12 +9,17 @@ import CrashSessionList from '@/components/crashes/CrashSessionList';
 import { Bug } from 'lucide-react';
 
 export default function CrashesPage() {
-  const [crashes, setCrashes]           = useState<CrashGroup[]>([]);
-  const [selected, setSelected]         = useState<CrashGroup | null>(null);
-  const [sessions, setSessions]         = useState<CrashSession[]>([]);
+  const searchParams = useSearchParams();
+  const router       = useRouter();
+
+  // Days comes from URL so it persists on refresh and can be shared
+  const days = Math.min(90, Math.max(1, parseInt(searchParams.get('days') ?? '30') || 30));
+
+  const [crashes,        setCrashes]        = useState<CrashGroup[]>([]);
+  const [selected,       setSelected]       = useState<CrashGroup | null>(null);
+  const [sessions,       setSessions]       = useState<CrashSession[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(false);
-  const [days, setDays]                 = useState(30);
-  const [apiError, setApiError]         = useState(false);
+  const [apiError,       setApiError]       = useState(false);
 
   useEffect(() => {
     getCrashGroups(days)
@@ -29,6 +35,10 @@ export default function CrashesPage() {
       .catch(() => setSessions([]))
       .finally(() => setSessionsLoading(false));
   }, [selected, days]);
+
+  function setDays(d: number) {
+    router.push(`/crashes?days=${d}`);
+  }
 
   const totalSessions = crashes.reduce((s, c) => s + c.affected_sessions, 0);
 

@@ -5,19 +5,30 @@ import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 
 interface Props {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ seek?: string }>;
+  params:       Promise<{ id: string }>;
+  searchParams: Promise<{ seek?: string; from?: string }>;
+}
+
+/** Derive a human-readable back-link label from the `from` path. */
+function backLabel(from: string): string {
+  if (from.startsWith('/users'))   return 'Back to User';
+  if (from.startsWith('/crashes')) return 'Back to Crashes';
+  if (from.startsWith('/segments'))return 'Back to Segments';
+  return 'Back to Sessions';
 }
 
 export const revalidate = 0;
 
 export default async function SessionReplayPage({ params, searchParams }: Props) {
-  const { id } = await params;
-  const { seek } = await searchParams;
+  const { id }   = await params;
+  const { seek, from } = await searchParams;
+
   const initialSeekMs = seek ? Math.max(0, parseInt(seek)) : undefined;
+  const backHref      = from ?? '/sessions';
+  const backText      = from ? backLabel(from) : 'Back to Sessions';
 
   let session = null;
-  let events = null;
+  let events  = null;
 
   try {
     [session, events] = await Promise.all([
@@ -32,13 +43,13 @@ export default async function SessionReplayPage({ params, searchParams }: Props)
 
   return (
     <div>
-      {/* Back link */}
+      {/* Smart back link — respects where the user came from */}
       <Link
-        href="/sessions"
+        href={backHref}
         className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 mb-6 transition-colors"
       >
         <ChevronLeft size={16} />
-        Back to Sessions
+        {backText}
       </Link>
 
       <div className="mb-6">

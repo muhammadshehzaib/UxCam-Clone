@@ -94,7 +94,7 @@ export default async function UserDetailPage({ params, searchParams }: Props) {
           </span>
         )}
       </h2>
-      <SessionTable sessions={sessionsResult?.data ?? []} />
+      <SessionTable sessions={sessionsResult?.data ?? []} fromPath={`/users/${id}`} />
 
       {totalPages > 1 && (
         <div className="mt-6">

@@ -4,16 +4,22 @@ import { formatMs, formatDateTime, truncate, getDeviceIcon } from '@/lib/utils';
 import { Play } from 'lucide-react';
 
 interface SessionTableProps {
-  sessions: Session[];
+  sessions:  Session[];
+  fromPath?: string; // when set, appended as ?from=<encoded> so session detail shows the right back link
 }
 
-export default function SessionTable({ sessions }: SessionTableProps) {
+export default function SessionTable({ sessions, fromPath }: SessionTableProps) {
   if (sessions.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
         <p className="text-slate-400">No sessions yet. Use the SDK test harness to generate one.</p>
       </div>
     );
+  }
+
+  function sessionHref(id: string): string {
+    if (fromPath) return `/sessions/${id}?from=${encodeURIComponent(fromPath)}`;
+    return `/sessions/${id}`;
   }
 
   return (
@@ -61,7 +67,7 @@ export default function SessionTable({ sessions }: SessionTableProps) {
               </td>
               <td className="px-4 py-3">
                 <Link
-                  href={`/sessions/${s.id}`}
+                  href={sessionHref(s.id)}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-50 text-brand-600 hover:bg-brand-100 rounded-lg text-xs font-medium transition-colors"
                 >
                   <Play size={12} />

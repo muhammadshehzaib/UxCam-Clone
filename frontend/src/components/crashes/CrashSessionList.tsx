@@ -66,7 +66,7 @@ export default function CrashSessionList({ sessions, loading }: CrashSessionList
               </td>
               <td className="px-3 py-2 text-right">
                 <Link
-                  href={`/sessions/${s.id}?seek=${s.crash_elapsed_ms}`}
+                  href={`/sessions/${s.id}?seek=${s.crash_elapsed_ms}&from=%2Fcrashes`}
                   className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-brand-600 bg-brand-50 hover:bg-brand-100 rounded-lg transition-colors"
                   data-testid={`replay-link-${s.id}`}
                 >
