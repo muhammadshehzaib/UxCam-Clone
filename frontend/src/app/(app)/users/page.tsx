@@ -77,6 +77,13 @@ export default async function UsersPage({ searchParams }: Props) {
         <ExportButton path={exportPath} filename="users.csv" />
       </div>
 
+      {/* Trait filter */}
+      <div className="mb-4">
+        <Suspense fallback={null}>
+          <TraitFilter />
+        </Suspense>
+      </div>
+
       {/* Search bar */}
       <form method="GET" action="/users" className="mb-4">
         {/* Preserve other filters */}

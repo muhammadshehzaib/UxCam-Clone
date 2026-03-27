@@ -116,14 +116,15 @@ export async function updateSessionTags(sessionId: string, tags: string[]): Prom
 }
 
 export async function getUsers(params?: {
-  page?:        number;
-  limit?:       number;
-  device?:      string;
-  os?:          string;
-  browser?:     string;
-  minDuration?: string;  // seconds as string
-  rageClick?:   boolean;
-  search?:      string;
+  page?:          number;
+  limit?:         number;
+  device?:        string;
+  os?:            string;
+  browser?:       string;
+  minDuration?:   string;  // seconds as string
+  rageClick?:     boolean;
+  search?:        string;
+  traitFilters?:  { key: string; value: string }[];
 }): Promise<PaginatedResponse<AppUser>> {
   const qs = new URLSearchParams();
   if (params?.page)        qs.set('page',        String(params.page));
@@ -133,7 +134,13 @@ export async function getUsers(params?: {
   if (params?.browser)     qs.set('browser',     params.browser);
   if (params?.minDuration) qs.set('minDuration', params.minDuration);
   if (params?.rageClick)   qs.set('rageClick',   'true');
-  if (params?.search)      qs.set('search',      params.search);
+  if (params?.search)       qs.set('search',      params.search);
+  if (params?.traitFilters?.length) {
+    for (const { key, value } of params.traitFilters) {
+      qs.append('traitKey', key);
+      qs.append('traitVal', value);
+    }
+  }
   return apiFetch<PaginatedResponse<AppUser>>(`/users?${qs}`);
 }
 
