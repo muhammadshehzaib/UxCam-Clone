@@ -6,6 +6,7 @@ export interface UserFilters {
   browser?:     string;
   minDuration?: number;   // ms
   rageClick?:   boolean;
+  search?:      string;   // matches external_id, traits.name, traits.email
 }
 
 export async function listUsers(
@@ -37,6 +38,17 @@ export async function listUsers(
            AND ${sessionConditions.join(' AND ')}
        )`
     );
+  }
+
+  // Full-text search across external_id, trait name, and trait email
+  if (filters.search) {
+    conditions.push(
+      `(u.external_id       ILIKE $${pi}
+        OR u.traits->>'name'  ILIKE $${pi}
+        OR u.traits->>'email' ILIKE $${pi})`
+    );
+    params.push(`%${filters.search}%`);
+    pi++;
   }
 
   const where = conditions.join(' AND ');

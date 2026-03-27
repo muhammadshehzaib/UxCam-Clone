@@ -1,4 +1,5 @@
 import { db } from '../db/client';
+import { toCsv } from '../lib/csv';
 
 export interface SessionFilters {
   userId?:      string;
@@ -67,4 +68,44 @@ export async function getSessionById(projectId: string, sessionId: string) {
 
   if (result.rows.length === 0) throw new Error('NOT_FOUND');
   return result.rows[0];
+}
+
+const EXPORT_HEADERS = [
+  'id', 'user_id', 'anonymous_id', 'started_at', 'ended_at',
+  'duration_ms', 'device_type', 'os', 'browser', 'country', 'city',
+  'event_count', 'rage_click', 'note', 'tags',
+];
+
+export async function exportSessionsAsCsv(
+  projectId: string,
+  filters: SessionFilters
+): Promise<string> {
+  const conditions: string[] = ['s.project_id = $1'];
+  const params: unknown[]    = [projectId];
+  let pi = 2;
+
+  if (filters.userId)      { conditions.push(`s.user_id = $${pi++}`);                    params.push(filters.userId); }
+  if (filters.device)      { conditions.push(`s.device_type = $${pi++}`);                params.push(filters.device); }
+  if (filters.os)          { conditions.push(`s.os ILIKE $${pi++}`);                     params.push(filters.os); }
+  if (filters.browser)     { conditions.push(`s.browser ILIKE $${pi++}`);                params.push(filters.browser); }
+  if (filters.dateFrom)    { conditions.push(`s.started_at >= $${pi++}`);                params.push(new Date(filters.dateFrom)); }
+  if (filters.dateTo)      { conditions.push(`s.started_at <= $${pi++}`);                params.push(new Date(filters.dateTo)); }
+  if (filters.minDuration) { conditions.push(`s.duration_ms >= $${pi++}`);               params.push(filters.minDuration); }
+  if (filters.rageClick)   { conditions.push(`s.metadata->>'rage_click' = 'true'`); }
+
+  const result = await db.query(
+    `SELECT s.id, s.user_id, s.anonymous_id, s.started_at, s.ended_at,
+            s.duration_ms, s.device_type, s.os, s.browser,
+            s.country, s.city, s.event_count,
+            s.metadata->>'rage_click'  AS rage_click,
+            s.metadata->>'note'        AS note,
+            s.metadata->>'tags'        AS tags
+     FROM sessions s
+     WHERE ${conditions.join(' AND ')}
+     ORDER BY s.started_at DESC
+     LIMIT 10000`,
+    params
+  );
+
+  return toCsv(EXPORT_HEADERS, result.rows);
 }

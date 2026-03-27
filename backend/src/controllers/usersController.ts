@@ -17,6 +17,7 @@ export async function listUsers(req: ProjectRequest, res: Response): Promise<voi
       browser:     req.query.browser  as string | undefined,
       minDuration: minDurationSec ? minDurationSec * 1000 : undefined,
       rageClick:   req.query.rageClick === 'true' ? true : undefined,
+      search:      req.query.search   as string | undefined,
     });
     res.json(result);
   } catch (err) {
