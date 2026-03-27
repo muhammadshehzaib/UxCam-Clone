@@ -4,3 +4,7 @@ dist/
 .turbo/
 .env
 *.local
+
+# Local development docs
+API_TESTING_GUIDE.md
+
