@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Session } from '@/types';
+import { Session, TAG_OPTIONS } from '@/types';
 import { formatMs, formatDateTime, truncate, getDeviceIcon } from '@/lib/utils';
 import { Play } from 'lucide-react';
 
@@ -61,6 +61,21 @@ export default function SessionTable({ sessions, fromPath }: SessionTableProps) 
                   {s.metadata?.rage_click && (
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-600">
                       Rage
+                    </span>
+                  )}
+                  {s.metadata?.tags && s.metadata.tags.length > 0 && (
+                    <span className="flex items-center gap-0.5">
+                      {(s.metadata.tags as string[]).map((tagId) => {
+                        const tag = TAG_OPTIONS.find((t) => t.id === tagId);
+                        return tag ? (
+                          <span
+                            key={tagId}
+                            className="w-2 h-2 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: tag.color }}
+                            title={tag.label}
+                          />
+                        ) : null;
+                      })}
                     </span>
                   )}
                 </div>

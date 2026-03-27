@@ -34,6 +34,33 @@ export async function listSessions(req: ProjectRequest, res: Response): Promise<
   }
 }
 
+export async function exportSessions(req: ProjectRequest, res: Response): Promise<void> {
+  try {
+    const minDurationSec = req.query.minDuration
+      ? parseInt(req.query.minDuration as string, 10)
+      : undefined;
+
+    const csv = await sessionsService.exportSessionsAsCsv(req.project!.id, {
+      userId:      req.query.userId      as string | undefined,
+      device:      req.query.device      as string | undefined,
+      os:          req.query.os          as string | undefined,
+      browser:     req.query.browser     as string | undefined,
+      dateFrom:    req.query.dateFrom    as string | undefined,
+      dateTo:      req.query.dateTo      as string | undefined,
+      minDuration: minDurationSec ? minDurationSec * 1000 : undefined,
+      rageClick:   req.query.rageClick === 'true' ? true : undefined,
+    });
+
+    const date = new Date().toISOString().slice(0, 10);
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="sessions-${date}.csv"`);
+    res.send(csv);
+  } catch (err) {
+    console.error('exportSessions error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 export async function getSession(req: ProjectRequest, res: Response): Promise<void> {
   try {
     const session = await sessionsService.getSessionById(req.project!.id, req.params.id as string);

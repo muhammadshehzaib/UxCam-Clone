@@ -3,6 +3,7 @@ import { AppUser } from '@/types';
 import { formatDateTime, truncate } from '@/lib/utils';
 import Link from 'next/link';
 import Pagination from '@/components/ui/Pagination';
+import ExportButton from '@/components/ui/ExportButton';
 import { Suspense } from 'react';
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
     browser?:     string;
     minDuration?: string;
     rageClick?:   string;
+    search?:      string;
   }>;
 }
 
@@ -32,6 +34,7 @@ export default async function UsersPage({ searchParams }: Props) {
       browser:     params.browser,
       minDuration: params.minDuration,
       rageClick:   params.rageClick === 'true' ? true : undefined,
+      search:      params.search,
     });
   } catch {
     // API not available
@@ -41,19 +44,68 @@ export default async function UsersPage({ searchParams }: Props) {
   const total      = result?.meta.total ?? 0;
   const totalPages = Math.ceil(total / 20);
 
-  // Show an active filter notice when filtering by segment
   const isFiltered = !!(params.device || params.os || params.browser || params.minDuration || params.rageClick);
+  const isSearching = !!params.search;
+
+  // Build export URL with same filters
+  const exportQs = new URLSearchParams();
+  if (params.device)      exportQs.set('device',      params.device);
+  if (params.os)          exportQs.set('os',          params.os);
+  if (params.browser)     exportQs.set('browser',     params.browser);
+  if (params.minDuration) exportQs.set('minDuration', params.minDuration);
+  if (params.rageClick)   exportQs.set('rageClick',   params.rageClick);
+  if (params.search)      exportQs.set('search',      params.search);
+  const exportPath = `/users/export.csv?${exportQs}`;
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Users</h1>
-        <p className="text-slate-500 text-sm mt-1">
-          {total > 0
-            ? `${total.toLocaleString()} users${isFiltered ? ' matching filters' : ' tracked'}`
-            : 'No users yet'}
-        </p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Users</h1>
+          <p className="text-slate-500 text-sm mt-1">
+            {total > 0
+              ? `${total.toLocaleString()} users${isFiltered || isSearching ? ' matching filters' : ' tracked'}`
+              : 'No users yet'}
+          </p>
+        </div>
+        <ExportButton path={exportPath} filename="users.csv" />
       </div>
+
+      {/* Search bar */}
+      <form method="GET" action="/users" className="mb-4">
+        {/* Preserve other filters */}
+        {params.device      && <input type="hidden" name="device"      value={params.device} />}
+        {params.os          && <input type="hidden" name="os"          value={params.os} />}
+        {params.browser     && <input type="hidden" name="browser"     value={params.browser} />}
+        {params.minDuration && <input type="hidden" name="minDuration" value={params.minDuration} />}
+        {params.rageClick   && <input type="hidden" name="rageClick"   value={params.rageClick} />}
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            name="search"
+            defaultValue={params.search ?? ''}
+            placeholder="Search by name, email or user ID…"
+            className="flex-1 max-w-sm px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
+            data-testid="user-search-input"
+          />
+          <button
+            type="submit"
+            className="px-3 py-2 text-sm bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors"
+            data-testid="user-search-submit"
+          >
+            Search
+          </button>
+          {isSearching && (
+            <Link
+              href={`/users${isFiltered ? `?${new URLSearchParams({ device: params.device ?? '', os: params.os ?? '' }).toString()}` : ''}`}
+              className="text-sm text-slate-500 hover:text-slate-700 underline"
+              data-testid="user-search-clear"
+            >
+              Clear
+            </Link>
+          )}
+        </div>
+      </form>
 
       {isFiltered && (
         <div className="flex items-center gap-3 bg-brand-50 border border-brand-100 rounded-xl px-4 py-3 mb-6 text-sm text-brand-700">
@@ -67,7 +119,9 @@ export default async function UsersPage({ searchParams }: Props) {
       {users.length === 0 ? (
         <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
           <p className="text-slate-400">
-            {isFiltered ? 'No users match these filters.' : 'No users yet. Generate a session using the SDK test harness.'}
+            {isFiltered || isSearching
+              ? 'No users match these filters.'
+              : 'No users yet. Generate a session using the SDK test harness.'}
           </p>
         </div>
       ) : (

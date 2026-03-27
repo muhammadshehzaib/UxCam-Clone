@@ -1,5 +1,6 @@
 import { Session } from '@/types';
 import { formatDateTime, formatMs, getDeviceIcon } from '@/lib/utils';
+import SessionNoteEditor from './SessionNoteEditor';
 
 interface SessionInfoPanelProps {
   session: Session;
@@ -48,6 +49,13 @@ export default function SessionInfoPanel({ session }: SessionInfoPanelProps) {
           <InfoRow label="Location" value={[session.city, session.country].filter(Boolean).join(', ')} />
         )}
       </dl>
+
+      {/* Notes & Tags — client component for interactivity */}
+      <SessionNoteEditor
+        sessionId={session.id}
+        initialNote={session.metadata?.note ?? ''}
+        initialTags={session.metadata?.tags ?? []}
+      />
     </div>
   );
 }

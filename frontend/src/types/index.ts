@@ -2,8 +2,20 @@ export interface SessionMetadata {
   rage_click?: boolean;
   rage_click_count?: number;
   rage_click_timestamps?: number[];
+  note?: string;
+  tags?: string[];
   [key: string]: unknown;
 }
+
+export const TAG_OPTIONS = [
+  { id: 'bug',       label: 'Bug',       color: '#ef4444' },
+  { id: 'important', label: 'Important', color: '#f97316' },
+  { id: 'reviewed',  label: 'Reviewed',  color: '#22c55e' },
+  { id: 'followup',  label: 'Follow up', color: '#3b82f6' },
+  { id: 'ux-issue',  label: 'UX Issue',  color: '#8b5cf6' },
+] as const;
+
+export type TagId = typeof TAG_OPTIONS[number]['id'];
 
 export interface Session {
   id: string;

@@ -1,4 +1,5 @@
 import { db } from '../db/client';
+import { toCsv } from '../lib/csv';
 
 export interface UserFilters {
   device?:      string;
@@ -73,6 +74,58 @@ export async function listUsers(
     data: rowsResult.rows,
     meta: { page, limit, total: parseInt(countResult.rows[0].count, 10) },
   };
+}
+
+export async function exportUsersAsCsv(
+  projectId: string,
+  filters: UserFilters = {}
+): Promise<string> {
+  const conditions: string[] = ['u.project_id = $1'];
+  const params: unknown[]    = [projectId];
+  let pi = 2;
+
+  const sessionConditions: string[] = [];
+  if (filters.device)      { sessionConditions.push(`s.device_type = $${pi++}`);   params.push(filters.device); }
+  if (filters.os)          { sessionConditions.push(`s.os ILIKE $${pi++}`);         params.push(filters.os); }
+  if (filters.browser)     { sessionConditions.push(`s.browser ILIKE $${pi++}`);   params.push(filters.browser); }
+  if (filters.minDuration) { sessionConditions.push(`s.duration_ms >= $${pi++}`);  params.push(filters.minDuration); }
+  if (filters.rageClick)   { sessionConditions.push(`s.metadata->>'rage_click' = 'true'`); }
+
+  if (sessionConditions.length > 0) {
+    conditions.push(
+      `EXISTS (SELECT 1 FROM sessions s WHERE s.user_id = u.id AND s.project_id = u.project_id AND ${sessionConditions.join(' AND ')})`
+    );
+  }
+
+  if (filters.search) {
+    conditions.push(
+      `(u.external_id ILIKE $${pi} OR u.traits->>'name' ILIKE $${pi} OR u.traits->>'email' ILIKE $${pi})`
+    );
+    params.push(`%${filters.search}%`);
+    pi++;
+  }
+
+  const result = await db.query(
+    `SELECT
+       u.id,
+       u.external_id,
+       u.anonymous_id,
+       u.traits->>'name'  AS name,
+       u.traits->>'email' AS email,
+       u.first_seen_at,
+       u.last_seen_at,
+       u.session_count
+     FROM app_users u
+     WHERE ${conditions.join(' AND ')}
+     ORDER BY u.last_seen_at DESC
+     LIMIT 10000`,
+    params
+  );
+
+  return toCsv(
+    ['id', 'external_id', 'anonymous_id', 'name', 'email', 'first_seen_at', 'last_seen_at', 'session_count'],
+    result.rows
+  );
 }
 
 export async function getUserById(projectId: string, userId: string) {

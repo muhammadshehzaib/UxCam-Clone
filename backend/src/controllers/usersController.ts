@@ -26,6 +26,31 @@ export async function listUsers(req: ProjectRequest, res: Response): Promise<voi
   }
 }
 
+export async function exportUsers(req: ProjectRequest, res: Response): Promise<void> {
+  const minDurationSec = req.query.minDuration
+    ? parseInt(req.query.minDuration as string, 10)
+    : undefined;
+
+  try {
+    const csv = await usersService.exportUsersAsCsv(req.project!.id, {
+      device:      req.query.device   as string | undefined,
+      os:          req.query.os       as string | undefined,
+      browser:     req.query.browser  as string | undefined,
+      minDuration: minDurationSec ? minDurationSec * 1000 : undefined,
+      rageClick:   req.query.rageClick === 'true' ? true : undefined,
+      search:      req.query.search   as string | undefined,
+    });
+
+    const date = new Date().toISOString().slice(0, 10);
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="users-${date}.csv"`);
+    res.send(csv);
+  } catch (err) {
+    console.error('exportUsers error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 export async function getUser(req: ProjectRequest, res: Response): Promise<void> {
   try {
     const user = await usersService.getUserById(req.project!.id, req.params.id as string);

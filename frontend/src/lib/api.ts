@@ -96,6 +96,20 @@ export async function getSessionEvents(sessionId: string): Promise<SessionEvent[
   return res.data;
 }
 
+export async function updateSessionNote(sessionId: string, note: string): Promise<void> {
+  await apiFetch(`/sessions/${sessionId}/note`, {
+    method: 'PATCH',
+    body: JSON.stringify({ note }),
+  });
+}
+
+export async function updateSessionTags(sessionId: string, tags: string[]): Promise<void> {
+  await apiFetch(`/sessions/${sessionId}/tags`, {
+    method: 'PATCH',
+    body: JSON.stringify({ tags }),
+  });
+}
+
 export async function getUsers(params?: {
   page?:        number;
   limit?:       number;
@@ -104,6 +118,7 @@ export async function getUsers(params?: {
   browser?:     string;
   minDuration?: string;  // seconds as string
   rageClick?:   boolean;
+  search?:      string;
 }): Promise<PaginatedResponse<AppUser>> {
   const qs = new URLSearchParams();
   if (params?.page)        qs.set('page',        String(params.page));
@@ -113,6 +128,7 @@ export async function getUsers(params?: {
   if (params?.browser)     qs.set('browser',     params.browser);
   if (params?.minDuration) qs.set('minDuration', params.minDuration);
   if (params?.rageClick)   qs.set('rageClick',   'true');
+  if (params?.search)      qs.set('search',      params.search);
   return apiFetch<PaginatedResponse<AppUser>>(`/users?${qs}`);
 }
 
@@ -251,6 +267,28 @@ export async function updateSegment(id: string, name: string, filters: SegmentFi
 
 export async function deleteSegment(id: string): Promise<void> {
   await apiFetch(`/segments/${id}`, { method: 'DELETE' });
+}
+
+/** Fetches a CSV export and triggers a browser download. */
+export async function downloadCsv(
+  path: string,
+  filename: string
+): Promise<void> {
+  const res = await fetch(`${API_URL}/api/v1${path}`, {
+    headers: { Authorization: `Bearer ${getToken()}` },
+    cache: 'no-store',
+  });
+  if (!res.ok) throw new Error(`Export failed: ${res.status}`);
+  const text = await res.text();
+  const blob = new Blob([text], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 export async function authRegister(
