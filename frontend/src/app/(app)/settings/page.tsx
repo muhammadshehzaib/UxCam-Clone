@@ -4,6 +4,7 @@ import InviteForm from '@/components/settings/InviteForm';
 import ApiKeyCard from '@/components/settings/ApiKeyCard';
 import WebhooksList from '@/components/settings/WebhooksList';
 import WebhookForm from '@/components/settings/WebhookForm';
+import ReportSubscriptions from '@/components/settings/ReportSubscriptions';
 import { Settings } from 'lucide-react';
 import { cookies } from 'next/headers';
 
@@ -98,6 +99,11 @@ export default async function SettingsPage() {
           <div className="border-t border-slate-100 pt-6">
             <WebhookForm projectId={projectId} />
           </div>
+        </div>
+
+        {/* Email Reports */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <ReportSubscriptions projectId={projectId} reports={[]} />
         </div>
       </div>
     </div>
