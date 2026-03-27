@@ -1,16 +1,17 @@
 'use client';
 
 import { useRef } from 'react';
-import { SessionEvent } from '@/types';
+import { SessionEvent, NetworkFailure } from '@/types';
 import { EVENT_COLORS } from '@/lib/utils';
 
 interface TimelineBarProps {
-  events:           SessionEvent[];
-  durationMs:       number;
-  currentTimeMs:    number;
-  onSeek:           (ms: number) => void;
-  rageTimestamps?:  number[];
+  events:            SessionEvent[];
+  durationMs:        number;
+  currentTimeMs:     number;
+  onSeek:            (ms: number) => void;
+  rageTimestamps?:   number[];
   freezeTimestamps?: number[];
+  networkFailures?:  NetworkFailure[];
 }
 
 export default function TimelineBar({
@@ -18,8 +19,9 @@ export default function TimelineBar({
   durationMs,
   currentTimeMs,
   onSeek,
-  rageTimestamps  = [],
+  rageTimestamps   = [],
   freezeTimestamps = [],
+  networkFailures  = [],
 }: TimelineBarProps) {
   const barRef = useRef<HTMLDivElement>(null);
 
@@ -92,6 +94,25 @@ export default function TimelineBar({
             <div
               className="w-1.5 h-4 rounded-sm"
               style={{ backgroundColor: EVENT_COLORS.freeze }}
+            />
+          </div>
+        );
+      })}
+
+      {/* Network failure markers — red circles below the track */}
+      {networkFailures.map((f, i) => {
+        const pct = durationMs > 0 ? (f.elapsed_ms / durationMs) * 100 : 0;
+        return (
+          <div
+            key={`net-${i}`}
+            data-testid="network-marker"
+            className="absolute -translate-x-1/2 z-20"
+            style={{ left: `${pct}%`, top: '50%', marginTop: 4 }}
+            title={`${f.method} ${f.url} → ${f.status || 'ERR'} (${f.duration_ms}ms) at ${(f.elapsed_ms / 1000).toFixed(1)}s`}
+          >
+            <div
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ backgroundColor: EVENT_COLORS.network }}
             />
           </div>
         );

@@ -10,6 +10,8 @@ import funnelsRouter from './routes/funnels';
 import authRouter from './routes/auth';
 import projectsRouter from './routes/projects';
 import segmentsRouter from './routes/segments';
+import teamRouter from './routes/team';
+import invitesRouter from './routes/invites';
 
 const app = express();
 
@@ -27,5 +29,7 @@ app.use('/api/v1/funnels', funnelsRouter);
 app.use('/api/v1/auth',     authRouter);
 app.use('/api/v1/projects', projectsRouter);
 app.use('/api/v1/segments', segmentsRouter);
+app.use('/api/v1/projects/:id', teamRouter);
+app.use('/api/v1/invites',      invitesRouter);
 
 export default app;

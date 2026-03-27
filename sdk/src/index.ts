@@ -4,12 +4,14 @@ import { Transport } from './transport';
 import { attachRecorder } from './recorder';
 import { attachErrorRecorder } from './errorRecorder';
 import { attachFreezeRecorder } from './freezeRecorder';
+import { attachNetworkRecorder } from './networkRecorder';
 
 let session: SessionManager | null = null;
 let transport: Transport | null = null;
 let detachRecorder: (() => void) | null = null;
 let detachErrorRecorder: (() => void) | null = null;
 let detachFreezeRecorder: (() => void) | null = null;
+let detachNetworkRecorder: (() => void) | null = null;
 let currentScreen = '/';
 
 function assertInitialized(): void {
@@ -46,6 +48,16 @@ export const UXClone = {
       },
       () => session!.getElapsedMs(),
       () => currentScreen
+    );
+
+    // Attach network recorder — captures failed fetch/XHR (status ≥400)
+    detachNetworkRecorder = attachNetworkRecorder(
+      (event: SDKEvent) => {
+        transport!.push(event);
+      },
+      () => session!.getElapsedMs(),
+      () => currentScreen,
+      config.endpoint
     );
 
     // Attach freeze recorder — detects main thread blocks ≥500ms
@@ -148,11 +160,13 @@ export const UXClone = {
     detachRecorder?.();
     detachErrorRecorder?.();
     detachFreezeRecorder?.();
+    detachNetworkRecorder?.();
     session = null;
     transport = null;
     detachRecorder = null;
     detachErrorRecorder = null;
     detachFreezeRecorder = null;
+    detachNetworkRecorder = null;
   },
 };
 

@@ -190,3 +190,37 @@ export interface RetentionData {
   summary: RetentionSummary;
   cohorts: RetentionCohort[];
 }
+
+export interface NetworkFailure {
+  elapsed_ms:  number;
+  url:         string;
+  method:      string;
+  status:      number;
+  duration_ms: number;
+}
+
+export interface TeamMember {
+  user_id:   string;
+  email:     string;
+  name:      string | null;
+  role:      'admin' | 'viewer';
+  joined_at: string;
+}
+
+export interface PendingInvite {
+  id:         string;
+  email:      string;
+  role:       'admin' | 'viewer';
+  expires_at: string;
+  created_at: string;
+  invite_url: string;
+}
+
+export interface InviteInfo {
+  id:           string;
+  project_name: string;
+  email:        string;
+  role:         'admin' | 'viewer';
+  invited_by:   string;
+  expires_at:   string;
+}

@@ -40,3 +40,7 @@ export const BookmarkCheck = Icon;
 export const Tag = Icon;
 export const TrendingUp = Icon;
 export const Download = Icon;
+export const Settings = Icon;
+export const UserPlus = Icon;
+export const Copy = Icon;
+export const Mail = Icon;

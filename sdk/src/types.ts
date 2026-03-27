@@ -6,7 +6,8 @@ export type EventType =
   | 'screen_view'
   | 'custom'
   | 'crash'
-  | 'freeze';
+  | 'freeze'
+  | 'network';
 
 export interface SDKEvent {
   type: EventType;

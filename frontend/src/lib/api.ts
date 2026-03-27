@@ -14,6 +14,9 @@ import {
   Segment,
   SegmentFilters,
   RetentionData,
+  TeamMember,
+  PendingInvite,
+  InviteInfo,
   PaginatedResponse,
 } from '@/types';
 
@@ -289,6 +292,47 @@ export async function downloadCsv(
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+// ── Team / Members ────────────────────────────────────────────────────────────
+
+export async function getTeamMembers(projectId: string): Promise<{
+  members: TeamMember[];
+  invites: PendingInvite[];
+}> {
+  const res = await apiFetch<{ data: { members: TeamMember[]; invites: PendingInvite[] } }>(
+    `/projects/${projectId}/members`
+  );
+  return res.data;
+}
+
+export async function createInvite(
+  projectId: string,
+  email: string,
+  role: 'admin' | 'viewer'
+): Promise<PendingInvite> {
+  const res = await apiFetch<{ data: PendingInvite }>(`/projects/${projectId}/invites`, {
+    method: 'POST',
+    body: JSON.stringify({ email, role }),
+  });
+  return res.data;
+}
+
+export async function removeTeamMember(projectId: string, userId: string): Promise<void> {
+  await apiFetch(`/projects/${projectId}/members/${userId}`, { method: 'DELETE' });
+}
+
+export async function getInviteInfo(token: string): Promise<InviteInfo> {
+  const res = await apiFetch<{ data: InviteInfo }>(`/invites/${token}`);
+  return res.data;
+}
+
+export async function acceptInvite(token: string): Promise<{ token: string; projectId: string }> {
+  const res = await apiFetch<{ data: { token: string; projectId: string } }>(
+    `/invites/${token}/accept`,
+    { method: 'POST' }
+  );
+  return res.data;
 }
 
 export async function authRegister(
