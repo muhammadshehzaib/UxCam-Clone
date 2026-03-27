@@ -7,7 +7,8 @@ export interface UserFilters {
   browser?:     string;
   minDuration?: number;   // ms
   rageClick?:   boolean;
-  search?:      string;   // matches external_id, traits.name, traits.email
+  search?:       string;   // matches external_id, traits.name, traits.email
+  traitFilters?: { key: string; value: string }[];
 }
 
 export async function listUsers(
@@ -52,6 +53,15 @@ export async function listUsers(
     pi++;
   }
 
+  if (filters.traitFilters && filters.traitFilters.length > 0) {
+    for (const { key, value } of filters.traitFilters) {
+      if (key && value) {
+        conditions.push(`u.traits->>'${key.replace(/'/g, "''")}' ILIKE $${pi++}`);
+        params.push(`%${value}%`);
+      }
+    }
+  }
+
   const where = conditions.join(' AND ');
 
   const [rowsResult, countResult] = await Promise.all([
@@ -74,6 +84,18 @@ export async function listUsers(
     data: rowsResult.rows,
     meta: { page, limit, total: parseInt(countResult.rows[0].count, 10) },
   };
+}
+
+export async function getTraitKeys(projectId: string): Promise<string[]> {
+  const result = await db.query(
+    `SELECT DISTINCT jsonb_object_keys(traits) AS key
+     FROM app_users
+     WHERE project_id = $1 AND traits != '{}'::jsonb
+     ORDER BY key ASC
+     LIMIT 50`,
+    [projectId]
+  );
+  return result.rows.map((r) => r.key as string);
 }
 
 export async function exportUsersAsCsv(

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getFunnels, getFunnelResults } from '@/lib/api';
 import FunnelList from '@/components/funnels/FunnelList';
 import FunnelChart from '@/components/funnels/FunnelChart';
+import DaysFilter from '@/components/ui/DaysFilter';
 import { ChevronLeft } from 'lucide-react';
 
 interface Props {
@@ -64,21 +65,7 @@ export default async function FunnelDetailPage({ params, searchParams }: Props) 
                   : 'No data yet'}
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              {([7, 30, 90] as const).map((d) => (
-                <Link
-                  key={d}
-                  href={`/funnels/${id}?days=${d}`}
-                  className={`text-xs px-2.5 py-1 rounded-lg font-medium transition-colors ${
-                    days === d
-                      ? 'bg-brand-600 text-white'
-                      : 'text-slate-500 hover:bg-slate-100'
-                  }`}
-                >
-                  {d}d
-                </Link>
-              ))}
-            </div>
+            <DaysFilter days={days} basePath={`/funnels/${id}`} />
           </div>
 
           <FunnelChart steps={results?.steps ?? []} />

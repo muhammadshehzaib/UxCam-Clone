@@ -73,6 +73,7 @@ export async function getSessions(params?: {
   dateTo?: string;
   minDuration?: string; // seconds as string
   rageClick?: boolean;
+  tags?: string[];
 }): Promise<PaginatedResponse<Session>> {
   const qs = new URLSearchParams();
   if (params?.page)        qs.set('page',        String(params.page));
@@ -85,6 +86,7 @@ export async function getSessions(params?: {
   if (params?.dateTo)      qs.set('dateTo',      params.dateTo);
   if (params?.minDuration) qs.set('minDuration', params.minDuration);
   if (params?.rageClick)   qs.set('rageClick',   'true');
+  if (params?.tags?.length) qs.set('tags',        params.tags.join(','));
 
   return apiFetch<PaginatedResponse<Session>>(`/sessions?${qs}`);
 }
@@ -158,6 +160,23 @@ export async function getRetention(days = 90): Promise<RetentionData> {
   return res.data;
 }
 
+export async function getUserTraitKeys(): Promise<string[]> {
+  const res = await apiFetch<{ data: string[] }>('/users/trait-keys');
+  return res.data;
+}
+
+export async function getCustomEvents(days = 30): Promise<{ events: Array<{ name: string; count: number }>; total_events: number; unique_names: number }> {
+  const res = await apiFetch<{ data: { events: Array<{ name: string; count: number }>; total_events: number; unique_names: number } }>(`/analytics/custom-events?days=${days}`);
+  return res.data;
+}
+
+export async function getCustomEventTimeline(name: string, days = 30): Promise<Array<{ date: string; count: number }>> {
+  const res = await apiFetch<{ data: Array<{ date: string; count: number }> }>(
+    `/analytics/custom-events/${encodeURIComponent(name)}/timeline?days=${days}`
+  );
+  return res.data;
+}
+
 export async function getHeatmap(screen: string, days = 30): Promise<HeatmapPoint[]> {
   const qs = new URLSearchParams({ screen, days: String(days) });
   const res = await apiFetch<{ data: HeatmapPoint[] }>(`/analytics/heatmap?${qs}`);
@@ -224,6 +243,13 @@ export async function authLogin(email: string, password: string): Promise<AuthRe
   }
   const body = await res.json() as { data: AuthResult };
   return body.data;
+}
+
+export async function regenerateApiKey(projectId: string): Promise<string> {
+  const res = await apiFetch<{ data: { api_key: string } }>(`/projects/${projectId}/regenerate-key`, {
+    method: 'POST',
+  });
+  return res.data.api_key;
 }
 
 export async function getProjects(): Promise<Project[]> {

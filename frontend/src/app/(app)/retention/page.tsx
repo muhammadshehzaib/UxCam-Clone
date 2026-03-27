@@ -1,7 +1,7 @@
 import { getRetention } from '@/lib/api';
 import RetentionCards from '@/components/retention/RetentionCards';
 import RetentionChart from '@/components/retention/RetentionChart';
-import Link from 'next/link';
+import DaysFilter from '@/components/ui/DaysFilter';
 import { TrendingUp } from 'lucide-react';
 
 interface Props {
@@ -38,22 +38,7 @@ export default async function RetentionPage({ searchParams }: Props) {
           </div>
         </div>
 
-        {/* Days switcher */}
-        <div className="flex items-center gap-1">
-          {([30, 60, 90] as const).map((d) => (
-            <Link
-              key={d}
-              href={`/retention?days=${d}`}
-              className={`text-xs px-2.5 py-1 rounded-lg font-medium transition-colors ${
-                days === d
-                  ? 'bg-brand-600 text-white'
-                  : 'text-slate-500 hover:bg-slate-100'
-              }`}
-            >
-              {d}d
-            </Link>
-          ))}
-        </div>
+        <DaysFilter days={days} basePath="/retention" presets={[30, 60, 90]} />
       </div>
 
       {/* Summary cards */}

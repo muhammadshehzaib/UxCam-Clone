@@ -1,8 +1,8 @@
 import { getScreenFlow } from '@/lib/api';
 import ScreenFlowTable from '@/components/flow/ScreenFlowTable';
 import ScreenSummaryCards from '@/components/flow/ScreenSummaryCards';
+import DaysFilter from '@/components/ui/DaysFilter';
 import { Workflow } from 'lucide-react';
-import Link from 'next/link';
 
 interface Props {
   searchParams: Promise<{ days?: string }>;
@@ -41,22 +41,7 @@ export default async function FlowPage({ searchParams }: Props) {
           </div>
         </div>
 
-        {/* Days filter */}
-        <div className="flex items-center gap-1">
-          {([7, 30, 90] as const).map((d) => (
-            <Link
-              key={d}
-              href={`/flow?days=${d}`}
-              className={`text-xs px-2.5 py-1 rounded-lg font-medium transition-colors ${
-                days === d
-                  ? 'bg-brand-600 text-white'
-                  : 'text-slate-500 hover:bg-slate-100'
-              }`}
-            >
-              {d}d
-            </Link>
-          ))}
-        </div>
+        <DaysFilter days={days} basePath="/flow" />
       </div>
 
       {/* Transitions table */}

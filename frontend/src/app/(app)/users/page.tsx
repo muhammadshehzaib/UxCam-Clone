@@ -4,6 +4,7 @@ import { formatDateTime, truncate } from '@/lib/utils';
 import Link from 'next/link';
 import Pagination from '@/components/ui/Pagination';
 import ExportButton from '@/components/ui/ExportButton';
+import TraitFilter from '@/components/users/TraitFilter';
 import { Suspense } from 'react';
 
 interface Props {
@@ -15,6 +16,8 @@ interface Props {
     minDuration?: string;
     rageClick?:   string;
     search?:      string;
+    traitKey?:    string | string[];
+    traitVal?:    string | string[];
   }>;
 }
 
@@ -35,6 +38,7 @@ export default async function UsersPage({ searchParams }: Props) {
       minDuration: params.minDuration,
       rageClick:   params.rageClick === 'true' ? true : undefined,
       search:      params.search,
+      traitFilters: traitKeys.map((k, i) => ({ key: k, value: traitVals[i] ?? '' })).filter((f) => f.key && f.value),
     });
   } catch {
     // API not available
@@ -44,7 +48,9 @@ export default async function UsersPage({ searchParams }: Props) {
   const total      = result?.meta.total ?? 0;
   const totalPages = Math.ceil(total / 20);
 
-  const isFiltered = !!(params.device || params.os || params.browser || params.minDuration || params.rageClick);
+  const traitKeys = params.traitKey ? (Array.isArray(params.traitKey) ? params.traitKey : [params.traitKey]) : [];
+  const traitVals = params.traitVal ? (Array.isArray(params.traitVal) ? params.traitVal : [params.traitVal]) : [];
+  const isFiltered  = !!(params.device || params.os || params.browser || params.minDuration || params.rageClick || traitKeys.length);
   const isSearching = !!params.search;
 
   // Build export URL with same filters

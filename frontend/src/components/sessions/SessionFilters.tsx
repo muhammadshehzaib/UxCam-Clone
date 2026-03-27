@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { X } from 'lucide-react';
 import SegmentPicker from '@/components/segments/SegmentPicker';
+import { TAG_OPTIONS } from '@/types';
 
 const DEVICES  = ['mobile', 'tablet', 'desktop'];
 const OS_LIST  = ['macOS', 'Windows', 'iOS', 'Android', 'Linux'];
@@ -13,6 +14,8 @@ export default function SessionFilters() {
   const router       = useRouter();
   const pathname     = usePathname();
   const searchParams = useSearchParams();
+
+  const activeTags = (searchParams.get('tags') ?? '').split(',').filter(Boolean);
 
   const current = {
     dateFrom:    searchParams.get('dateFrom')    ?? '',
@@ -24,7 +27,17 @@ export default function SessionFilters() {
     rageClick:   searchParams.get('rageClick')   ?? '',
   };
 
-  const hasFilters = Object.values(current).some(Boolean);
+  function toggleTag(tagId: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    const next = activeTags.includes(tagId)
+      ? activeTags.filter((t) => t !== tagId)
+      : [...activeTags, tagId];
+    if (next.length > 0) { params.set('tags', next.join(',')); } else { params.delete('tags'); }
+    params.delete('page');
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
+  const hasFilters = Object.values(current).some(Boolean) || activeTags.length > 0;
 
   function update(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -121,6 +134,29 @@ export default function SessionFilters() {
           />
         </div>
 
+        {/* Tag chips */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-slate-500 font-medium">Tags</label>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {TAG_OPTIONS.map((tag) => {
+              const active = activeTags.includes(tag.id);
+              return (
+                <button
+                  key={tag.id}
+                  onClick={() => toggleTag(tag.id)}
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${
+                    active ? 'text-white border-transparent' : 'text-slate-500 border-slate-200 hover:border-slate-300'
+                  }`}
+                  style={active ? { backgroundColor: tag.color, borderColor: tag.color } : {}}
+                  data-testid={`tag-filter-${tag.id}`}
+                >
+                  {tag.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Rage click toggle */}
         <div className="flex items-center gap-2 pb-1">
           <input
@@ -157,6 +193,10 @@ export default function SessionFilters() {
           {current.browser     && <FilterBadge label={`Browser: ${current.browser}`}  onRemove={() => update('browser',     '')} />}
           {current.minDuration && <FilterBadge label={`Min: ${current.minDuration}s`} onRemove={() => update('minDuration', '')} />}
           {current.rageClick   && <FilterBadge label="Rage clicks"                    onRemove={() => update('rageClick',   '')} />}
+          {activeTags.map((tagId) => {
+            const tag = TAG_OPTIONS.find((t) => t.id === tagId);
+            return tag ? <FilterBadge key={tagId} label={tag.label} onRemove={() => toggleTag(tagId)} /> : null;
+          })}
         </div>
       )}
     </div>

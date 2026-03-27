@@ -1,16 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { getCrashGroups, getCrashSessions } from '@/lib/api';
 import { CrashGroup, CrashSession } from '@/types';
 import CrashList from '@/components/crashes/CrashList';
 import CrashSessionList from '@/components/crashes/CrashSessionList';
+import DaysFilter from '@/components/ui/DaysFilter';
 import { Bug } from 'lucide-react';
 
 export default function CrashesPage() {
   const searchParams = useSearchParams();
-  const router       = useRouter();
 
   // Days comes from URL so it persists on refresh and can be shared
   const days = Math.min(90, Math.max(1, parseInt(searchParams.get('days') ?? '30') || 30));
@@ -36,10 +36,6 @@ export default function CrashesPage() {
       .finally(() => setSessionsLoading(false));
   }, [selected, days]);
 
-  function setDays(d: number) {
-    router.push(`/crashes?days=${d}`);
-  }
-
   const totalSessions = crashes.reduce((s, c) => s + c.affected_sessions, 0);
 
   return (
@@ -57,19 +53,7 @@ export default function CrashesPage() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-1">
-          {([7, 30, 90] as const).map((d) => (
-            <button
-              key={d}
-              onClick={() => setDays(d)}
-              className={`text-xs px-2.5 py-1 rounded-lg font-medium transition-colors ${
-                days === d ? 'bg-brand-600 text-white' : 'text-slate-500 hover:bg-slate-100'
-              }`}
-            >
-              {d}d
-            </button>
-          ))}
-        </div>
+        <DaysFilter days={days} basePath="/crashes" />
       </div>
 
       {/* API error banner */}

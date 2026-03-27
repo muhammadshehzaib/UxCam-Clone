@@ -33,6 +33,20 @@ export async function createProject(req: ProjectRequest, res: Response): Promise
   }
 }
 
+export async function regenerateApiKey(req: ProjectRequest, res: Response): Promise<void> {
+  try {
+    const newKey = await projectService.regenerateApiKey(req.params.id);
+    res.json({ data: { api_key: newKey } });
+  } catch (err) {
+    if (err instanceof Error && err.message === 'NOT_FOUND') {
+      res.status(404).json({ error: 'Project not found' });
+      return;
+    }
+    console.error('regenerateApiKey error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 export async function switchProject(req: ProjectRequest, res: Response): Promise<void> {
   try {
     const result = await projectService.switchProject(

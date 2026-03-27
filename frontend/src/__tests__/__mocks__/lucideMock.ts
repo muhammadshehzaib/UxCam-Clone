@@ -44,3 +44,5 @@ export const Settings = Icon;
 export const UserPlus = Icon;
 export const Copy = Icon;
 export const Mail = Icon;
+export const RefreshCw = Icon;
+export const Activity = Icon;

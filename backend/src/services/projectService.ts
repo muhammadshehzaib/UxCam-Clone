@@ -68,6 +68,16 @@ export async function createProject(
   }
 }
 
+export async function regenerateApiKey(projectId: string): Promise<string> {
+  const newKey = `proj_${generateApiKey()}`;
+  const result = await db.query(
+    `UPDATE projects SET api_key = $1 WHERE id = $2 RETURNING api_key`,
+    [newKey, projectId]
+  );
+  if (result.rows.length === 0) throw new Error('NOT_FOUND');
+  return result.rows[0].api_key as string;
+}
+
 export async function switchProject(
   userId: string,
   email: string,

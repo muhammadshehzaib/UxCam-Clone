@@ -53,6 +53,51 @@ export async function getSummary(projectId: string, days: number) {
   return summary;
 }
 
+export async function getCustomEvents(projectId: string, days: number) {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  const [eventsResult, totalsResult] = await Promise.all([
+    db.query(
+      `SELECT value AS name, COUNT(*) AS count
+       FROM events
+       WHERE project_id = $1 AND type = 'custom' AND timestamp >= $2
+         AND value IS NOT NULL
+       GROUP BY value
+       ORDER BY count DESC
+       LIMIT 20`,
+      [projectId, since]
+    ),
+    db.query(
+      `SELECT COUNT(*) AS total_events,
+              COUNT(DISTINCT value) AS unique_names
+       FROM events
+       WHERE project_id = $1 AND type = 'custom' AND timestamp >= $2`,
+      [projectId, since]
+    ),
+  ]);
+
+  return {
+    events:       eventsResult.rows.map((r) => ({ name: r.name as string, count: parseInt(r.count, 10) })),
+    total_events: parseInt(totalsResult.rows[0].total_events, 10),
+    unique_names: parseInt(totalsResult.rows[0].unique_names, 10),
+  };
+}
+
+export async function getCustomEventTimeline(projectId: string, eventName: string, days: number) {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  const result = await db.query(
+    `SELECT DATE(timestamp) AS date, COUNT(*) AS count
+     FROM events
+     WHERE project_id = $1 AND type = 'custom' AND value = $2 AND timestamp >= $3
+     GROUP BY DATE(timestamp)
+     ORDER BY date ASC`,
+    [projectId, eventName, since]
+  );
+
+  return result.rows.map((r) => ({ date: r.date as string, count: parseInt(r.count, 10) }));
+}
+
 export async function getSessionsOverTime(projectId: string, days: number) {
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 

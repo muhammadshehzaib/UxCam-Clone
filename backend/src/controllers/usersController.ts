@@ -18,10 +18,26 @@ export async function listUsers(req: ProjectRequest, res: Response): Promise<voi
       minDuration: minDurationSec ? minDurationSec * 1000 : undefined,
       rageClick:   req.query.rageClick === 'true' ? true : undefined,
       search:      req.query.search   as string | undefined,
+      traitFilters: req.query.traitKey
+        ? (Array.isArray(req.query.traitKey) ? req.query.traitKey : [req.query.traitKey]).map((key, i) => {
+            const val = Array.isArray(req.query.traitVal) ? req.query.traitVal[i] : req.query.traitVal;
+            return { key: String(key), value: String(val ?? '') };
+          }).filter((f) => f.key && f.value)
+        : undefined,
     });
     res.json(result);
   } catch (err) {
     console.error('listUsers error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+export async function getTraitKeys(req: ProjectRequest, res: Response): Promise<void> {
+  try {
+    const keys = await usersService.getTraitKeys(req.project!.id);
+    res.json({ data: keys });
+  } catch (err) {
+    console.error('getTraitKeys error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 }

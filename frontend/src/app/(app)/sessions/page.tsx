@@ -15,6 +15,7 @@ interface Props {
     dateTo?:      string;
     minDuration?: string;
     rageClick?:   string;
+    tags?:        string;
   }>;
 }
 
@@ -23,6 +24,7 @@ export const revalidate = 0;
 export default async function SessionsPage({ searchParams }: Props) {
   const params = await searchParams;
   const page   = Math.max(1, parseInt(params.page ?? '1'));
+  const tags   = params.tags ? params.tags.split(',').filter(Boolean) : undefined;
 
   let result = null;
   try {
@@ -36,6 +38,7 @@ export default async function SessionsPage({ searchParams }: Props) {
       dateTo:      params.dateTo,
       minDuration: params.minDuration,
       rageClick:   params.rageClick === 'true' ? true : undefined,
+      tags,
     });
   } catch {
     // API not available
@@ -45,7 +48,6 @@ export default async function SessionsPage({ searchParams }: Props) {
   const total      = result?.meta.total ?? 0;
   const totalPages = Math.ceil(total / 20);
 
-  // Build export URL with same filters (no page param)
   const exportQs = new URLSearchParams();
   if (params.device)      exportQs.set('device',      params.device);
   if (params.os)          exportQs.set('os',          params.os);
@@ -54,6 +56,7 @@ export default async function SessionsPage({ searchParams }: Props) {
   if (params.dateTo)      exportQs.set('dateTo',      params.dateTo);
   if (params.minDuration) exportQs.set('minDuration', params.minDuration);
   if (params.rageClick)   exportQs.set('rageClick',   params.rageClick);
+  if (params.tags)        exportQs.set('tags',        params.tags);
   const exportPath = `/sessions/export.csv?${exportQs}`;
 
   return (
@@ -68,7 +71,6 @@ export default async function SessionsPage({ searchParams }: Props) {
         <ExportButton path={exportPath} filename="sessions.csv" />
       </div>
 
-      {/* Filters — wrapped in Suspense because it uses useSearchParams internally */}
       <Suspense fallback={<div className="h-16 bg-white border border-slate-200 rounded-xl animate-pulse mb-6" />}>
         <SessionFilters />
       </Suspense>

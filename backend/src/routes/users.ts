@@ -5,8 +5,9 @@ import * as usersController from '../controllers/usersController';
 const router = Router();
 router.use(requireDashboardToken);
 
-// Export must come before /:id to avoid Express treating "export.csv" as a user ID
+// Static routes before /:id to avoid Express treating them as user IDs
 router.get('/export.csv',    usersController.exportUsers);
+router.get('/trait-keys',    usersController.getTraitKeys);
 
 router.get('/',              usersController.listUsers);
 router.get('/:id',           usersController.getUser);

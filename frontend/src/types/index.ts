@@ -216,6 +216,17 @@ export interface PendingInvite {
   invite_url: string;
 }
 
+export interface CustomEventItem {
+  name:  string;
+  count: number;
+}
+
+export interface CustomEventsData {
+  events:       CustomEventItem[];
+  total_events: number;
+  unique_names: number;
+}
+
 export interface InviteInfo {
   id:           string;
   project_name: string;

@@ -26,6 +26,7 @@ export async function listSessions(req: ProjectRequest, res: Response): Promise<
       dateTo:      req.query.dateTo      as string | undefined,
       minDuration: minDurationSec ? minDurationSec * 1000 : undefined,
       rageClick:   req.query.rageClick === 'true' ? true : undefined,
+      tags:        req.query.tags ? (req.query.tags as string).split(',').filter(Boolean) : undefined,
     });
     res.json(result);
   } catch (err) {

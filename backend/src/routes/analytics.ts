@@ -16,6 +16,8 @@ router.get('/screens',            heatmapController.getScreenNames);
 router.get('/crashes',            crashController.getCrashGroups);
 router.get('/crashes/sessions',   crashController.getCrashSessions);
 router.get('/screen-flow',        screenFlowController.getScreenFlow);
-router.get('/retention',          retentionController.getRetention);
+router.get('/retention',                        retentionController.getRetention);
+router.get('/custom-events',                    analyticsController.getCustomEvents);
+router.get('/custom-events/:name/timeline',     analyticsController.getCustomEventTimeline);
 
 export default router;

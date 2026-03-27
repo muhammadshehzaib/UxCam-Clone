@@ -10,6 +10,7 @@ export interface SessionFilters {
   dateTo?:      string;
   minDuration?: number;   // ms
   rageClick?:   boolean;
+  tags?:        string[]; // filter sessions that have ANY of these tags
 }
 
 export async function listSessions(
@@ -31,6 +32,13 @@ export async function listSessions(
   if (filters.dateTo)      { conditions.push(`s.started_at <= $${pi++}`);                params.push(new Date(filters.dateTo)); }
   if (filters.minDuration) { conditions.push(`s.duration_ms >= $${pi++}`);               params.push(filters.minDuration); }
   if (filters.rageClick)   { conditions.push(`s.metadata->>'rage_click' = 'true'`); }
+  if (filters.tags && filters.tags.length > 0) {
+    const tagClauses = filters.tags.map((tag) => {
+      params.push(JSON.stringify([tag]));
+      return `s.metadata->'tags' @> $${pi++}::jsonb`;
+    });
+    conditions.push(`(${tagClauses.join(' OR ')})`);
+  }
 
   const where = conditions.join(' AND ');
 
