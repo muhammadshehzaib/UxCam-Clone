@@ -52,6 +52,8 @@ export default function ReplayViewerClient({ session, events, initialSeekMs }: R
           <ReplayCanvas
             events={events}
             activeEventIndex={activeEventIndex}
+            currentTimeMs={currentTimeMs}
+            networkFailures={networkFailures}
             screenWidth={session.screen_width}
             screenHeight={session.screen_height}
           />

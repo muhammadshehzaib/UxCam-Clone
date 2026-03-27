@@ -1,25 +1,31 @@
 'use client';
 
 import { useMemo } from 'react';
-import { SessionEvent } from '@/types';
+import { SessionEvent, NetworkFailure } from '@/types';
 import { EVENT_COLORS } from '@/lib/utils';
 
 interface ReplayCanvasProps {
-  events: SessionEvent[];
+  events:           SessionEvent[];
   activeEventIndex: number;
-  screenWidth: number | null;
-  screenHeight: number | null;
+  currentTimeMs?:   number;
+  networkFailures?: NetworkFailure[];
+  screenWidth:      number | null;
+  screenHeight:     number | null;
 }
 
 const CANVAS_WIDTH = 320;
+// Network failure badge shows for 3 seconds after the failure timestamp
+const NETWORK_BADGE_WINDOW_MS = 3000;
 
 export default function ReplayCanvas({
   events,
   activeEventIndex,
+  currentTimeMs = 0,
+  networkFailures = [],
   screenWidth,
   screenHeight,
 }: ReplayCanvasProps) {
-  const aspectRatio = screenWidth && screenHeight ? screenHeight / screenWidth : 16 / 9;
+  const aspectRatio  = screenWidth && screenHeight ? screenHeight / screenWidth : 16 / 9;
   const canvasHeight = Math.round(CANVAS_WIDTH * aspectRatio);
 
   const activeEvent = useMemo(
@@ -27,16 +33,37 @@ export default function ReplayCanvas({
     [events, activeEventIndex]
   );
 
+  // Click trail — last 5 click events before (and including) activeEventIndex
+  const clickTrail = useMemo(() => {
+    const clicks = events
+      .slice(0, activeEventIndex + 1)
+      .filter((e) => e.type === 'click' && e.x !== null && e.y !== null)
+      .slice(-5);
+    return clicks.map((e, i, arr) => ({
+      ...e,
+      opacity: arr.length > 1 ? 0.2 + (0.6 * (i / (arr.length - 1))) : 0.8,
+    }));
+  }, [events, activeEventIndex]);
+
+  // Network failure badge — show the most recent failure within the window
+  const activeNetworkFailure = useMemo(() => {
+    return networkFailures.find(
+      (f) => f.elapsed_ms <= currentTimeMs && f.elapsed_ms >= currentTimeMs - NETWORK_BADGE_WINDOW_MS
+    ) ?? null;
+  }, [networkFailures, currentTimeMs]);
+
   const tapX = activeEvent?.x != null ? activeEvent.x * CANVAS_WIDTH : null;
   const tapY = activeEvent?.y != null ? activeEvent.y * canvasHeight : null;
   const isPointerEvent = activeEvent?.type === 'click' || activeEvent?.type === 'input';
-  const isScrollEvent = activeEvent?.type === 'scroll';
-  const eventColor = activeEvent ? (EVENT_COLORS[activeEvent.type] ?? '#6366f1') : '#6366f1';
+  const isScrollEvent  = activeEvent?.type === 'scroll';
+  const isInputEvent   = activeEvent?.type === 'input';
+  const eventColor     = activeEvent ? (EVENT_COLORS[activeEvent.type] ?? '#6366f1') : '#6366f1';
 
   return (
     <div
       className="relative bg-slate-800 rounded-2xl overflow-hidden border-4 border-slate-700 shadow-xl"
       style={{ width: CANVAS_WIDTH, height: canvasHeight }}
+      data-testid="replay-canvas"
     >
       {/* Device screen background */}
       <div className="absolute inset-0 bg-white" />
@@ -50,59 +77,71 @@ export default function ReplayCanvas({
         </div>
       )}
 
-      {/* Tap indicator */}
+      {/* Click trail — fading dots of recent clicks */}
+      {clickTrail.slice(0, -1).map((click, i) => (
+        click.x != null && click.y != null ? (
+          <div
+            key={`trail-${click.id}-${i}`}
+            data-testid="click-trail-dot"
+            className="absolute pointer-events-none rounded-full border-2 border-white"
+            style={{
+              left:            click.x * CANVAS_WIDTH,
+              top:             click.y * canvasHeight,
+              transform:       'translate(-50%, -50%)',
+              width:           10,
+              height:          10,
+              backgroundColor: EVENT_COLORS.click,
+              opacity:         click.opacity,
+            }}
+          />
+        ) : null
+      ))}
+
+      {/* Tap indicator for active click/input */}
       {isPointerEvent && tapX != null && tapY != null && (
         <div
           className="absolute pointer-events-none"
-          style={{
-            left: tapX,
-            top: tapY,
-            transform: 'translate(-50%, -50%)',
-          }}
+          style={{ left: tapX, top: tapY, transform: 'translate(-50%, -50%)' }}
         >
-          {/* Outer ripple */}
           <div
             className="absolute rounded-full animate-ping"
-            style={{
-              width: 36,
-              height: 36,
-              top: -18,
-              left: -18,
-              backgroundColor: eventColor,
-              opacity: 0.3,
-            }}
+            style={{ width: 36, height: 36, top: -18, left: -18, backgroundColor: eventColor, opacity: 0.3 }}
           />
-          {/* Inner dot */}
           <div
             className="rounded-full"
-            style={{
-              width: 16,
-              height: 16,
-              backgroundColor: eventColor,
-              opacity: 0.85,
-              transform: 'translate(-50%, -50%)',
-              position: 'relative',
-            }}
+            style={{ width: 16, height: 16, backgroundColor: eventColor, opacity: 0.85, transform: 'translate(-50%, -50%)', position: 'relative' }}
           />
+        </div>
+      )}
+
+      {/* Keyboard input indicator */}
+      {isInputEvent && activeEvent?.target && (
+        <div className="absolute bottom-2 left-2 right-2 pointer-events-none z-20">
+          <div className="bg-slate-900/80 text-white text-xs px-2 py-1 rounded-lg truncate" data-testid="input-indicator">
+            ⌨ {activeEvent.target}
+          </div>
         </div>
       )}
 
       {/* Scroll indicator */}
       {isScrollEvent && (
         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-          <div
-            className="w-1.5 rounded-full opacity-70"
-            style={{
-              height: 48,
-              backgroundColor: EVENT_COLORS.scroll,
-            }}
-          />
-          <div
-            className="text-xs text-slate-500 mt-1 text-center"
-            style={{ fontSize: 10 }}
-          >
+          <div className="w-1.5 rounded-full opacity-70" style={{ height: 48, backgroundColor: EVENT_COLORS.scroll }} />
+          <div className="text-xs text-slate-500 mt-1 text-center" style={{ fontSize: 10 }}>
             ↕ {activeEvent?.value ?? ''}
           </div>
+        </div>
+      )}
+
+      {/* Network failure badge */}
+      {activeNetworkFailure && (
+        <div
+          className="absolute top-2 right-2 z-30 pointer-events-none"
+          data-testid="network-failure-badge"
+        >
+          <span className="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-mono">
+            {activeNetworkFailure.method} → {activeNetworkFailure.status || 'ERR'}
+          </span>
         </div>
       )}
 
