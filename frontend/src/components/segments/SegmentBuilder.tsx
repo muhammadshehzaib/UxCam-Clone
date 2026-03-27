@@ -10,16 +10,17 @@ const OS_LIST  = ['iOS', 'Android', 'macOS', 'Windows', 'Linux'];
 const BROWSERS = ['Chrome', 'Firefox', 'Safari', 'Edge'];
 
 interface SegmentBuilderProps {
-  onCreated: () => void;
+  onCreated:       () => void;
+  initialFilters?: SegmentFilters;
 }
 
-export default function SegmentBuilder({ onCreated }: SegmentBuilderProps) {
+export default function SegmentBuilder({ onCreated, initialFilters }: SegmentBuilderProps) {
   const [name,        setName]        = useState('');
-  const [device,      setDevice]      = useState('');
-  const [os,          setOs]          = useState('');
-  const [browser,     setBrowser]     = useState('');
-  const [minDuration, setMinDuration] = useState('');
-  const [rageClick,   setRageClick]   = useState(false);
+  const [device,      setDevice]      = useState(initialFilters?.device      ?? '');
+  const [os,          setOs]          = useState(initialFilters?.os          ?? '');
+  const [browser,     setBrowser]     = useState(initialFilters?.browser     ?? '');
+  const [minDuration, setMinDuration] = useState(initialFilters?.minDuration ? String(initialFilters.minDuration) : '');
+  const [rageClick,   setRageClick]   = useState(initialFilters?.rageClick   ?? false);
   const [saving,      setSaving]      = useState(false);
   const [error,       setError]       = useState<string | null>(null);
 

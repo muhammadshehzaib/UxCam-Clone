@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { getSegments } from '@/lib/api';
-import { Segment } from '@/types';
+import { Segment, SegmentFilters } from '@/types';
 import SegmentList from '@/components/segments/SegmentList';
 import SegmentBuilder from '@/components/segments/SegmentBuilder';
 import { Sliders } from 'lucide-react';
 
 export default function SegmentsPage() {
+  const searchParams = useSearchParams();
   const [segments, setSegments] = useState<Segment[]>([]);
 
   const load = useCallback(() => {
@@ -15,6 +17,19 @@ export default function SegmentsPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  // Build initialFilters from URL params (set by SegmentPicker's "Save current filters")
+  const initialFilters: SegmentFilters = {};
+  const device      = searchParams.get('device');
+  const os          = searchParams.get('os');
+  const browser     = searchParams.get('browser');
+  const minDuration = searchParams.get('minDuration');
+  const rageClick   = searchParams.get('rageClick');
+  if (device)      initialFilters.device      = device;
+  if (os)          initialFilters.os          = os;
+  if (browser)     initialFilters.browser     = browser;
+  if (minDuration) initialFilters.minDuration = parseInt(minDuration, 10);
+  if (rageClick === 'true') initialFilters.rageClick = true;
 
   return (
     <div>
@@ -34,8 +49,8 @@ export default function SegmentsPage() {
         <SegmentList segments={segments} onDeleted={load} />
       </div>
 
-      {/* Builder */}
-      <SegmentBuilder onCreated={load} />
+      {/* Builder — prefilled when arriving from "Save current filters" */}
+      <SegmentBuilder onCreated={load} initialFilters={initialFilters} />
     </div>
   );
 }

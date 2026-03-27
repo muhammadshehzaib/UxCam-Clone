@@ -1,18 +1,60 @@
 import { db } from '../db/client';
 
-export async function listUsers(projectId: string, page: number, limit: number) {
+export interface UserFilters {
+  device?:      string;
+  os?:          string;
+  browser?:     string;
+  minDuration?: number;   // ms
+  rageClick?:   boolean;
+}
+
+export async function listUsers(
+  projectId: string,
+  page: number,
+  limit: number,
+  filters: UserFilters = {}
+) {
   const offset = (page - 1) * limit;
+
+  const conditions: string[] = ['u.project_id = $1'];
+  const params: unknown[]    = [projectId];
+  let pi = 2;
+
+  // When any session-level filter is set, add an EXISTS subquery
+  const sessionConditions: string[] = [];
+  if (filters.device)      { sessionConditions.push(`s.device_type = $${pi++}`);                    params.push(filters.device); }
+  if (filters.os)          { sessionConditions.push(`s.os ILIKE $${pi++}`);                         params.push(filters.os); }
+  if (filters.browser)     { sessionConditions.push(`s.browser ILIKE $${pi++}`);                    params.push(filters.browser); }
+  if (filters.minDuration) { sessionConditions.push(`s.duration_ms >= $${pi++}`);                   params.push(filters.minDuration); }
+  if (filters.rageClick)   { sessionConditions.push(`s.metadata->>'rage_click' = 'true'`); }
+
+  if (sessionConditions.length > 0) {
+    conditions.push(
+      `EXISTS (
+         SELECT 1 FROM sessions s
+         WHERE s.user_id = u.id
+           AND s.project_id = u.project_id
+           AND ${sessionConditions.join(' AND ')}
+       )`
+    );
+  }
+
+  const where = conditions.join(' AND ');
 
   const [rowsResult, countResult] = await Promise.all([
     db.query(
-      `SELECT id, external_id, anonymous_id, traits, first_seen_at, last_seen_at, session_count
-       FROM app_users
-       WHERE project_id = $1
-       ORDER BY last_seen_at DESC
-       LIMIT $2 OFFSET $3`,
-      [projectId, limit, offset]
+      `SELECT u.id, u.external_id, u.anonymous_id, u.traits,
+              u.first_seen_at, u.last_seen_at, u.session_count
+       FROM app_users u
+       WHERE ${where}
+       ORDER BY u.last_seen_at DESC
+       LIMIT $${pi} OFFSET $${pi + 1}`,
+      [...params, limit, offset]
     ),
-    db.query('SELECT COUNT(*) FROM app_users WHERE project_id = $1', [projectId]),
+    db.query(
+      `SELECT COUNT(*) FROM app_users u WHERE ${where}`,
+      params
+    ),
   ]);
 
   return {

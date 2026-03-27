@@ -92,7 +92,16 @@ export default function SegmentPicker() {
             <>
               <div className="border-t border-slate-100" />
               <button
-                onClick={() => { router.push(`/segments`); setOpen(false); }}
+                onClick={() => {
+                  // Pass current filter params to /segments so builder can prefill
+                  const prefill = new URLSearchParams();
+                  ['device', 'os', 'browser', 'minDuration', 'rageClick'].forEach((k) => {
+                    const v = searchParams.get(k);
+                    if (v) prefill.set(k, v);
+                  });
+                  router.push(`/segments?${prefill.toString()}`);
+                  setOpen(false);
+                }}
                 className="w-full text-left px-4 py-2 text-xs text-brand-600 hover:bg-brand-50 transition-colors"
                 data-testid="save-current-filters-btn"
               >

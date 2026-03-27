@@ -6,8 +6,18 @@ export async function listUsers(req: ProjectRequest, res: Response): Promise<voi
   const page  = Math.max(1, parseInt(req.query.page as string) || 1);
   const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
 
+  const minDurationSec = req.query.minDuration
+    ? parseInt(req.query.minDuration as string, 10)
+    : undefined;
+
   try {
-    const result = await usersService.listUsers(req.project!.id, page, limit);
+    const result = await usersService.listUsers(req.project!.id, page, limit, {
+      device:      req.query.device   as string | undefined,
+      os:          req.query.os       as string | undefined,
+      browser:     req.query.browser  as string | undefined,
+      minDuration: minDurationSec ? minDurationSec * 1000 : undefined,
+      rageClick:   req.query.rageClick === 'true' ? true : undefined,
+    });
     res.json(result);
   } catch (err) {
     console.error('listUsers error:', err);

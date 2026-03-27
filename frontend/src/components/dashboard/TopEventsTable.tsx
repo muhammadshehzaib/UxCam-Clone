@@ -1,9 +1,16 @@
+import Link from 'next/link';
+
 interface TopEventsTableProps {
-  events: Array<{ name: string; count: number }>;
-  label?: string;
+  events:       Array<{ name: string; count: number }>;
+  label?:       string;
+  heatmapLink?: boolean; // when true, each row links to /heatmaps?screen=<name>
 }
 
-export default function TopEventsTable({ events, label = 'Top Events' }: TopEventsTableProps) {
+export default function TopEventsTable({
+  events,
+  label = 'Top Events',
+  heatmapLink = false,
+}: TopEventsTableProps) {
   if (events.length === 0) {
     return <p className="text-sm text-slate-400">No events yet</p>;
   }
@@ -17,7 +24,17 @@ export default function TopEventsTable({ events, label = 'Top Events' }: TopEven
         {events.map((ev) => (
           <div key={ev.name}>
             <div className="flex justify-between text-xs text-slate-600 mb-0.5">
-              <span className="truncate max-w-[200px]">{ev.name}</span>
+              {heatmapLink ? (
+                <Link
+                  href={`/heatmaps?screen=${encodeURIComponent(ev.name)}`}
+                  className="truncate max-w-[200px] hover:text-brand-600 hover:underline transition-colors"
+                  title={`View heatmap for ${ev.name}`}
+                >
+                  {ev.name}
+                </Link>
+              ) : (
+                <span className="truncate max-w-[200px]">{ev.name}</span>
+              )}
               <span className="font-medium">{ev.count.toLocaleString()}</span>
             </div>
             <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">

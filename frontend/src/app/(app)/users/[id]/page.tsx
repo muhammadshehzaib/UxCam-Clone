@@ -1,16 +1,23 @@
 import { getUser, getUserSessions } from '@/lib/api';
 import SessionTable from '@/components/sessions/SessionTable';
+import Pagination from '@/components/ui/Pagination';
 import { formatDateTime } from '@/lib/utils';
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { ChevronLeft } from 'lucide-react';
+import { Suspense } from 'react';
 
 interface Props {
-  params: Promise<{ id: string }>;
+  params:       Promise<{ id: string }>;
+  searchParams: Promise<{ page?: string }>;
 }
 
 export const revalidate = 0;
 
-export default async function UserDetailPage({ params }: Props) {
-  const { id } = await params;
+export default async function UserDetailPage({ params, searchParams }: Props) {
+  const { id }   = await params;
+  const { page: pageStr } = await searchParams;
+  const page = Math.max(1, parseInt(pageStr ?? '1'));
 
   let user = null;
   let sessionsResult = null;
@@ -18,7 +25,7 @@ export default async function UserDetailPage({ params }: Props) {
   try {
     [user, sessionsResult] = await Promise.all([
       getUser(id),
-      getUserSessions(id),
+      getUserSessions(id, { page }),
     ]);
   } catch {
     notFound();
@@ -26,8 +33,20 @@ export default async function UserDetailPage({ params }: Props) {
 
   if (!user) notFound();
 
+  const totalSessions = sessionsResult?.meta.total ?? 0;
+  const totalPages    = Math.ceil(totalSessions / 20);
+
   return (
     <div>
+      {/* Back link */}
+      <Link
+        href="/users"
+        className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 mb-6 transition-colors"
+      >
+        <ChevronLeft size={16} />
+        Back to Users
+      </Link>
+
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900">
           {user.external_id ?? 'Anonymous User'}
@@ -67,8 +86,23 @@ export default async function UserDetailPage({ params }: Props) {
       </div>
 
       {/* Sessions */}
-      <h2 className="text-lg font-semibold text-slate-900 mb-4">Sessions</h2>
+      <h2 className="text-lg font-semibold text-slate-900 mb-4">
+        Sessions
+        {totalSessions > 0 && (
+          <span className="ml-2 text-sm font-normal text-slate-500">
+            ({totalSessions.toLocaleString()})
+          </span>
+        )}
+      </h2>
       <SessionTable sessions={sessionsResult?.data ?? []} />
+
+      {totalPages > 1 && (
+        <div className="mt-6">
+          <Suspense fallback={null}>
+            <Pagination currentPage={page} totalPages={totalPages} />
+          </Suspense>
+        </div>
+      )}
     </div>
   );
 }

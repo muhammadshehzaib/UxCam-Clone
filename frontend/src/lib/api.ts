@@ -96,12 +96,22 @@ export async function getSessionEvents(sessionId: string): Promise<SessionEvent[
 }
 
 export async function getUsers(params?: {
-  page?: number;
-  limit?: number;
+  page?:        number;
+  limit?:       number;
+  device?:      string;
+  os?:          string;
+  browser?:     string;
+  minDuration?: string;  // seconds as string
+  rageClick?:   boolean;
 }): Promise<PaginatedResponse<AppUser>> {
   const qs = new URLSearchParams();
-  if (params?.page) qs.set('page', String(params.page));
-  if (params?.limit) qs.set('limit', String(params.limit));
+  if (params?.page)        qs.set('page',        String(params.page));
+  if (params?.limit)       qs.set('limit',       String(params.limit));
+  if (params?.device)      qs.set('device',      params.device);
+  if (params?.os)          qs.set('os',          params.os);
+  if (params?.browser)     qs.set('browser',     params.browser);
+  if (params?.minDuration) qs.set('minDuration', params.minDuration);
+  if (params?.rageClick)   qs.set('rageClick',   'true');
   return apiFetch<PaginatedResponse<AppUser>>(`/users?${qs}`);
 }
 

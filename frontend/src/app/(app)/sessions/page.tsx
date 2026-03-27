@@ -64,7 +64,9 @@ export default async function SessionsPage({ searchParams }: Props) {
 
       {totalPages > 1 && (
         <div className="mt-6">
-          <Pagination currentPage={page} totalPages={totalPages} />
+          <Suspense fallback={null}>
+            <Pagination currentPage={page} totalPages={totalPages} />
+          </Suspense>
         </div>
       )}
     </div>

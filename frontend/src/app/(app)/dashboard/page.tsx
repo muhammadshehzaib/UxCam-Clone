@@ -64,7 +64,7 @@ export default async function DashboardPage() {
           <TopEventsTable events={summary?.topEvents ?? []} label="Top Custom Events" />
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-          <TopEventsTable events={summary?.topScreens ?? []} label="Top Screens" />
+          <TopEventsTable events={summary?.topScreens ?? []} label="Top Screens" heatmapLink />
         </div>
       </div>
     </div>

@@ -3,40 +3,72 @@ import { AppUser } from '@/types';
 import { formatDateTime, truncate } from '@/lib/utils';
 import Link from 'next/link';
 import Pagination from '@/components/ui/Pagination';
+import { Suspense } from 'react';
 
 interface Props {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{
+    page?:        string;
+    device?:      string;
+    os?:          string;
+    browser?:     string;
+    minDuration?: string;
+    rageClick?:   string;
+  }>;
 }
 
 export const revalidate = 0;
 
 export default async function UsersPage({ searchParams }: Props) {
   const params = await searchParams;
-  const page = Math.max(1, parseInt(params.page ?? '1'));
+  const page   = Math.max(1, parseInt(params.page ?? '1'));
 
   let result = null;
   try {
-    result = await getUsers({ page, limit: 20 });
+    result = await getUsers({
+      page,
+      limit:       20,
+      device:      params.device,
+      os:          params.os,
+      browser:     params.browser,
+      minDuration: params.minDuration,
+      rageClick:   params.rageClick === 'true' ? true : undefined,
+    });
   } catch {
     // API not available
   }
 
   const users: AppUser[] = result?.data ?? [];
-  const total = result?.meta.total ?? 0;
+  const total      = result?.meta.total ?? 0;
   const totalPages = Math.ceil(total / 20);
+
+  // Show an active filter notice when filtering by segment
+  const isFiltered = !!(params.device || params.os || params.browser || params.minDuration || params.rageClick);
 
   return (
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900">Users</h1>
         <p className="text-slate-500 text-sm mt-1">
-          {total > 0 ? `${total.toLocaleString()} users tracked` : 'No users yet'}
+          {total > 0
+            ? `${total.toLocaleString()} users${isFiltered ? ' matching filters' : ' tracked'}`
+            : 'No users yet'}
         </p>
       </div>
 
+      {isFiltered && (
+        <div className="flex items-center gap-3 bg-brand-50 border border-brand-100 rounded-xl px-4 py-3 mb-6 text-sm text-brand-700">
+          Filtered by segment —
+          <Link href="/users" className="underline hover:text-brand-900">
+            Clear filters
+          </Link>
+        </div>
+      )}
+
       {users.length === 0 ? (
         <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
-          <p className="text-slate-400">No users yet. Generate a session using the SDK test harness.</p>
+          <p className="text-slate-400">
+            {isFiltered ? 'No users match these filters.' : 'No users yet. Generate a session using the SDK test harness.'}
+          </p>
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -77,7 +109,9 @@ export default async function UsersPage({ searchParams }: Props) {
 
       {totalPages > 1 && (
         <div className="mt-6">
-          <Pagination currentPage={page} totalPages={totalPages} />
+          <Suspense fallback={null}>
+            <Pagination currentPage={page} totalPages={totalPages} />
+          </Suspense>
         </div>
       )}
     </div>
