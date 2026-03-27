@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { getCrashGroups, getCrashSessions } from '@/lib/api';
+import { getCrashGroups, getCrashSessions, getCrashTimeline } from '@/lib/api';
 import { CrashGroup, CrashSession } from '@/types';
 import CrashList from '@/components/crashes/CrashList';
 import CrashSessionList from '@/components/crashes/CrashSessionList';
+import CrashTrendChart from '@/components/crashes/CrashTrendChart';
 import DaysFilter from '@/components/ui/DaysFilter';
 import { Bug } from 'lucide-react';
 
@@ -20,11 +21,13 @@ export default function CrashesPage() {
   const [sessions,       setSessions]       = useState<CrashSession[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(false);
   const [apiError,       setApiError]       = useState(false);
+  const [timeline,       setTimeline]       = useState<Array<{ date: string; count: number }>>([]);
 
   useEffect(() => {
     getCrashGroups(days)
       .then((data) => { setCrashes(data); setApiError(false); setSelected(null); setSessions([]); })
       .catch(() => { setApiError(true); setCrashes([]); });
+    getCrashTimeline(days).then(setTimeline).catch(() => setTimeline([]));
   }, [days]);
 
   useEffect(() => {
@@ -65,6 +68,14 @@ export default function CrashesPage() {
           Could not load crash data. Check that the API is running.
         </div>
       )}
+
+      {/* Trend chart */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-6">
+        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
+          Crash Frequency
+        </h2>
+        <CrashTrendChart data={timeline} />
+      </div>
 
       {/* Crash list */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm mb-6">

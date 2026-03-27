@@ -17,7 +17,8 @@ function filtersToParams(filters: SegmentFilters): string {
   if (filters.os)          qs.set('os',          filters.os);
   if (filters.browser)     qs.set('browser',     filters.browser);
   if (filters.minDuration) qs.set('minDuration', String(filters.minDuration));
-  if (filters.rageClick)   qs.set('rageClick',   'true');
+  if (filters.rageClick)      qs.set('rageClick',   'true');
+  if (filters.tags?.length)   qs.set('tags',         filters.tags.join(','));
   return qs.toString();
 }
 
@@ -27,7 +28,8 @@ function FilterPills({ filters }: { filters: SegmentFilters }) {
   if (filters.os)          pills.push(`OS: ${filters.os}`);
   if (filters.browser)     pills.push(`Browser: ${filters.browser}`);
   if (filters.minDuration) pills.push(`Min: ${filters.minDuration}s`);
-  if (filters.rageClick)   pills.push('Rage clicks');
+  if (filters.rageClick)      pills.push('Rage clicks');
+  if (filters.tags?.length)   pills.push(`Tags: ${filters.tags.join(', ')}`);
 
   return (
     <div className="flex flex-wrap gap-1.5 mt-1">

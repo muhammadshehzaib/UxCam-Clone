@@ -16,6 +16,7 @@ interface Props {
     minDuration?: string;
     rageClick?:   string;
     tags?:        string;
+    screen?:      string;
   }>;
 }
 
@@ -39,6 +40,7 @@ export default async function SessionsPage({ searchParams }: Props) {
       minDuration: params.minDuration,
       rageClick:   params.rageClick === 'true' ? true : undefined,
       tags,
+      screen:      params.screen,
     });
   } catch {
     // API not available

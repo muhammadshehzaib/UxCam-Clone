@@ -74,6 +74,7 @@ export async function getSessions(params?: {
   minDuration?: string; // seconds as string
   rageClick?: boolean;
   tags?: string[];
+  screen?: string;
 }): Promise<PaginatedResponse<Session>> {
   const qs = new URLSearchParams();
   if (params?.page)        qs.set('page',        String(params.page));
@@ -87,6 +88,7 @@ export async function getSessions(params?: {
   if (params?.minDuration) qs.set('minDuration', params.minDuration);
   if (params?.rageClick)   qs.set('rageClick',   'true');
   if (params?.tags?.length) qs.set('tags',        params.tags.join(','));
+  if (params?.screen)       qs.set('screen',      params.screen);
 
   return apiFetch<PaginatedResponse<Session>>(`/sessions?${qs}`);
 }
@@ -184,9 +186,15 @@ export async function getCustomEventTimeline(name: string, days = 30): Promise<A
   return res.data;
 }
 
-export async function getHeatmap(screen: string, days = 30): Promise<HeatmapPoint[]> {
+export async function getCrashTimeline(days = 30): Promise<Array<{ date: string; count: number }>> {
+  const res = await apiFetch<{ data: Array<{ date: string; count: number }> }>(`/analytics/crashes/timeline?days=${days}`);
+  return res.data;
+}
+
+export async function getHeatmap(screen: string, days = 30, device?: string): Promise<import('@/types').HeatmapPoint[]> {
   const qs = new URLSearchParams({ screen, days: String(days) });
-  const res = await apiFetch<{ data: HeatmapPoint[] }>(`/analytics/heatmap?${qs}`);
+  if (device) qs.set('device', device);
+  const res = await apiFetch<{ data: import('@/types').HeatmapPoint[] }>(`/analytics/heatmap?${qs}`);
   return res.data;
 }
 

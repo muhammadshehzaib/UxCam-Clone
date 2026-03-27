@@ -54,6 +54,24 @@ export async function getCrashGroups(
   }));
 }
 
+export async function getCrashTimeline(
+  projectId: string,
+  days: number
+): Promise<Array<{ date: string; count: number }>> {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  const result = await db.query(
+    `SELECT DATE(timestamp) AS date, COUNT(*) AS count
+     FROM events
+     WHERE project_id = $1 AND type = 'crash' AND timestamp >= $2
+     GROUP BY DATE(timestamp)
+     ORDER BY date ASC`,
+    [projectId, since]
+  );
+
+  return result.rows.map((r) => ({ date: r.date as string, count: parseInt(r.count, 10) }));
+}
+
 export async function getCrashSessions(
   projectId: string,
   message: string,

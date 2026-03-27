@@ -11,6 +11,7 @@ export interface SessionFilters {
   minDuration?: number;   // ms
   rageClick?:   boolean;
   tags?:        string[]; // filter sessions that have ANY of these tags
+  screen?:      string;   // filter sessions that visited this screen
 }
 
 export async function listSessions(
@@ -32,6 +33,12 @@ export async function listSessions(
   if (filters.dateTo)      { conditions.push(`s.started_at <= $${pi++}`);                params.push(new Date(filters.dateTo)); }
   if (filters.minDuration) { conditions.push(`s.duration_ms >= $${pi++}`);               params.push(filters.minDuration); }
   if (filters.rageClick)   { conditions.push(`s.metadata->>'rage_click' = 'true'`); }
+  if (filters.screen)      {
+    conditions.push(
+      `EXISTS (SELECT 1 FROM events e2 WHERE e2.session_id = s.id AND e2.screen_name = $${pi++} AND e2.type IN ('navigate', 'screen_view'))`
+    );
+    params.push(filters.screen);
+  }
   if (filters.tags && filters.tags.length > 0) {
     const tagClauses = filters.tags.map((tag) => {
       params.push(JSON.stringify([tag]));

@@ -2,7 +2,7 @@ import { getHeatmapScreens } from '@/lib/api';
 import HeatmapViewer from '@/components/heatmaps/HeatmapViewer';
 
 interface Props {
-  searchParams: Promise<{ screen?: string }>;
+  searchParams: Promise<{ screen?: string; device?: string }>;
 }
 
 export const revalidate = 0;
@@ -17,9 +17,10 @@ export default async function HeatmapsPage({ searchParams }: Props) {
     // API not available
   }
 
-  const selected = params.screen ?? screens[0] ?? '';
+  const selected       = params.screen ?? screens[0] ?? '';
+  const initialDevice  = params.device ?? '';
 
   return (
-    <HeatmapViewer screens={screens} initialScreen={selected} />
+    <HeatmapViewer screens={screens} initialScreen={selected} initialDevice={initialDevice} />
   );
 }

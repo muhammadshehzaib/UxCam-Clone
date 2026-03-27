@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { FunnelStepResult } from '@/types';
 
 interface FunnelChartProps {
@@ -18,8 +19,9 @@ export default function FunnelChart({ steps }: FunnelChartProps) {
   return (
     <div className="space-y-1" data-testid="funnel-chart">
       {steps.map((step, i) => {
-        const barWidth = maxCount > 0 ? (step.count / maxCount) * 100 : 0;
-        const isLast = i === steps.length - 1;
+        const barWidth    = maxCount > 0 ? (step.count / maxCount) * 100 : 0;
+        const isLast      = i === steps.length - 1;
+        const sessionHref = `/sessions?screen=${encodeURIComponent(step.screen)}`;
 
         return (
           <div key={step.screen}>
@@ -33,9 +35,15 @@ export default function FunnelChart({ steps }: FunnelChartProps) {
               {/* Screen name + bar */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-slate-700 truncate">
+                  {/* Screen name — clickable link to sessions that reached this step */}
+                  <Link
+                    href={sessionHref}
+                    className="text-sm font-medium text-brand-700 hover:underline truncate"
+                    title={`View sessions that reached ${step.screen}`}
+                    data-testid={`funnel-step-link-${i}`}
+                  >
                     {step.screen}
-                  </span>
+                  </Link>
                   <div className="flex items-center gap-3 ml-4 flex-shrink-0">
                     <span className="text-sm font-semibold text-slate-800">
                       {step.count.toLocaleString()}
@@ -52,7 +60,7 @@ export default function FunnelChart({ steps }: FunnelChartProps) {
                   <div
                     className="h-full rounded-md transition-all duration-500"
                     style={{
-                      width: `${barWidth}%`,
+                      width:           `${barWidth}%`,
                       backgroundColor: i === 0 ? '#6366f1' : `hsl(${244 - i * 20}, 80%, ${55 + i * 5}%)`,
                     }}
                     data-testid={`funnel-bar-${i}`}
@@ -61,14 +69,19 @@ export default function FunnelChart({ steps }: FunnelChartProps) {
               </div>
             </div>
 
-            {/* Drop-off connector (between steps) */}
+            {/* Drop-off connector — link to sessions at this step */}
             {!isLast && step.dropoff > 0 && (
               <div className="flex items-center gap-4 py-1 ml-10">
                 <div className="flex-1 flex items-center gap-2 text-xs text-slate-400">
                   <div className="w-px h-4 bg-slate-200 ml-2" />
-                  <span className="text-red-500 font-medium">
+                  <Link
+                    href={sessionHref}
+                    className="text-red-500 font-medium hover:underline"
+                    title={`View sessions at ${step.screen}`}
+                    data-testid={`funnel-dropoff-link-${i}`}
+                  >
                     −{step.dropoff.toLocaleString()} dropped ({step.dropoff_pct}%)
-                  </span>
+                  </Link>
                 </div>
               </div>
             )}

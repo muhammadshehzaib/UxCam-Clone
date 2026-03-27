@@ -10,30 +10,40 @@ export interface HeatmapPoint {
 export async function getHeatmap(
   projectId: string,
   screenName: string,
-  days: number
+  days: number,
+  device?: string        // optional: 'mobile' | 'tablet' | 'desktop'
 ): Promise<HeatmapPoint[]> {
-  const cacheKey = `heatmap:${projectId}:${screenName}:${days}`;
+  const cacheKey = `heatmap:${projectId}:${screenName}:${days}:${device ?? 'all'}`;
 
   const cached = await redis.get(cacheKey);
   if (cached) return JSON.parse(cached);
 
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
+  // When filtering by device we need to JOIN with sessions
+  const deviceJoin   = device ? `JOIN sessions ses ON ses.id = e.session_id` : '';
+  const deviceClause = device ? `AND ses.device_type = $4` : '';
+  const queryParams  = device
+    ? [projectId, screenName, since, device]
+    : [projectId, screenName, since];
+
   const result = await db.query(
     `SELECT
-       ROUND(x::numeric, 2) AS x,
-       ROUND(y::numeric, 2) AS y,
+       ROUND(e.x::numeric, 2) AS x,
+       ROUND(e.y::numeric, 2) AS y,
        COUNT(*) AS count
-     FROM events
-     WHERE project_id = $1
-       AND type = 'click'
-       AND screen_name = $2
-       AND timestamp >= $3
-       AND x IS NOT NULL
-       AND y IS NOT NULL
-     GROUP BY ROUND(x::numeric, 2), ROUND(y::numeric, 2)
+     FROM events e
+     ${deviceJoin}
+     WHERE e.project_id = $1
+       AND e.type = 'click'
+       AND e.screen_name = $2
+       AND e.timestamp >= $3
+       AND e.x IS NOT NULL
+       AND e.y IS NOT NULL
+       ${deviceClause}
+     GROUP BY ROUND(e.x::numeric, 2), ROUND(e.y::numeric, 2)
      ORDER BY count DESC`,
-    [projectId, screenName, since]
+    queryParams
   );
 
   const data: HeatmapPoint[] = result.rows.map((r) => ({

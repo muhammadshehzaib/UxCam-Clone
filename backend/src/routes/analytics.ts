@@ -14,6 +14,7 @@ router.get('/sessions-over-time', analyticsController.getSessionsOverTime);
 router.get('/heatmap',            heatmapController.getHeatmap);
 router.get('/screens',            heatmapController.getScreenNames);
 router.get('/crashes',            crashController.getCrashGroups);
+router.get('/crashes/timeline',   crashController.getCrashTimeline);   // before /sessions to avoid prefix match
 router.get('/crashes/sessions',   crashController.getCrashSessions);
 router.get('/screen-flow',        screenFlowController.getScreenFlow);
 router.get('/retention',                        retentionController.getRetention);

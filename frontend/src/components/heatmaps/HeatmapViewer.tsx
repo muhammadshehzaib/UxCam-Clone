@@ -10,13 +10,22 @@ import ScreenPicker from './ScreenPicker';
 const FRAME_WIDTH = 390;
 const FRAME_HEIGHT = 720;
 
+const DEVICE_OPTIONS = [
+  { value: '',         label: 'All' },
+  { value: 'mobile',   label: 'Mobile' },
+  { value: 'tablet',   label: 'Tablet' },
+  { value: 'desktop',  label: 'Desktop' },
+];
+
 interface HeatmapViewerProps {
-  screens: string[];
+  screens:       string[];
   initialScreen: string;
+  initialDevice?: string;
 }
 
-export default function HeatmapViewer({ screens, initialScreen }: HeatmapViewerProps) {
+export default function HeatmapViewer({ screens, initialScreen, initialDevice = '' }: HeatmapViewerProps) {
   const [selected, setSelected] = useState(initialScreen);
+  const [device,   setDevice]   = useState(initialDevice);
   const [points, setPoints] = useState<HeatmapPoint[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalClicks, setTotalClicks] = useState(0);
@@ -24,17 +33,17 @@ export default function HeatmapViewer({ screens, initialScreen }: HeatmapViewerP
   useEffect(() => {
     if (!selected) return;
 
-    setPoints([]);       // clear stale data immediately — don't show previous screen's data
+    setPoints([]);
     setTotalClicks(0);
     setLoading(true);
-    getHeatmap(selected)
+    getHeatmap(selected, 30, device || undefined)
       .then((data) => {
         setPoints(data);
         setTotalClicks(data.reduce((sum, p) => sum + p.count, 0));
       })
       .catch(() => setPoints([]))
       .finally(() => setLoading(false));
-  }, [selected]);
+  }, [selected, device]);
 
   // Sync selected screen when initialScreen changes (URL navigation)
   useEffect(() => {
@@ -55,12 +64,31 @@ export default function HeatmapViewer({ screens, initialScreen }: HeatmapViewerP
               : 'Select a screen to view click distribution'}
           </p>
         </div>
-        <Suspense fallback={null}>
-          <ScreenPicker
-            screens={screens}
-            selected={selected}
-          />
-        </Suspense>
+        <div className="flex items-center gap-2">
+          {/* Device filter */}
+          <div className="flex items-center gap-1 border border-slate-200 rounded-lg p-0.5 bg-white">
+            {DEVICE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setDevice(opt.value)}
+                className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                  device === opt.value
+                    ? 'bg-brand-600 text-white'
+                    : 'text-slate-500 hover:bg-slate-100'
+                }`}
+                data-testid={`device-filter-${opt.value || 'all'}`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <Suspense fallback={null}>
+            <ScreenPicker
+              screens={screens}
+              selected={selected}
+            />
+          </Suspense>
+        </div>
       </div>
 
       {screens.length === 0 ? (

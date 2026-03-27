@@ -136,6 +136,30 @@ export default function SegmentBuilder({ onCreated, initialFilters }: SegmentBui
             />
           </div>
 
+          {/* Tags */}
+          <div className="col-span-2 lg:col-span-3">
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">Session Tags</label>
+            <div className="flex flex-wrap gap-1.5">
+              {TAG_OPTIONS.map((tag) => {
+                const active = activeTags.includes(tag.id);
+                return (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => setActiveTags(active ? activeTags.filter((t) => t !== tag.id) : [...activeTags, tag.id])}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${
+                      active ? 'text-white border-transparent' : 'text-slate-500 border-slate-200 hover:border-slate-300'
+                    }`}
+                    style={active ? { backgroundColor: tag.color, borderColor: tag.color } : {}}
+                    data-testid={`segment-tag-${tag.id}`}
+                  >
+                    {tag.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Rage click */}
           <div className="flex items-center gap-2 pt-5">
             <input

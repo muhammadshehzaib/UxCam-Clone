@@ -11,8 +11,10 @@ export async function getHeatmap(req: ProjectRequest, res: Response): Promise<vo
     return;
   }
 
+  const device = req.query.device as string | undefined;
+
   try {
-    const data = await heatmapService.getHeatmap(req.project!.id, screen, days);
+    const data = await heatmapService.getHeatmap(req.project!.id, screen, days, device);
     res.json({ data });
   } catch (err) {
     console.error('getHeatmap error:', err);

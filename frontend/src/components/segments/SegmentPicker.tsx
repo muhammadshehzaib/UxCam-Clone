@@ -12,7 +12,8 @@ function filtersToParams(filters: SegmentFilters): Record<string, string> {
   if (filters.os)          p.os          = filters.os;
   if (filters.browser)     p.browser     = filters.browser;
   if (filters.minDuration) p.minDuration = String(filters.minDuration);
-  if (filters.rageClick)   p.rageClick   = 'true';
+  if (filters.rageClick)      p.rageClick   = 'true';
+  if (filters.tags?.length)   p.tags        = filters.tags.join(',');
   return p;
 }
 
