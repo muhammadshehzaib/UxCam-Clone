@@ -110,6 +110,27 @@ export async function getBookmarks(): Promise<Session[]> {
   return res.data;
 }
 
+export async function getWebhooks(): Promise<import('@/types').Webhook[]> {
+  const res = await apiFetch<{ data: import('@/types').Webhook[] }>('/webhooks');
+  return res.data;
+}
+
+export async function createWebhook(name: string, url: string, events: string[], secret?: string): Promise<import('@/types').Webhook> {
+  const res = await apiFetch<{ data: import('@/types').Webhook }>('/webhooks', {
+    method: 'POST',
+    body: JSON.stringify({ name, url, events, secret }),
+  });
+  return res.data;
+}
+
+export async function deleteWebhook(id: string): Promise<void> {
+  await apiFetch(`/webhooks/${id}`, { method: 'DELETE' });
+}
+
+export async function testWebhook(id: string): Promise<void> {
+  await apiFetch(`/webhooks/${id}/test`, { method: 'POST' });
+}
+
 export async function getSessionEvents(sessionId: string): Promise<SessionEvent[]> {
   const res = await apiFetch<{ data: SessionEvent[] }>(`/sessions/${sessionId}/events`);
   return res.data;

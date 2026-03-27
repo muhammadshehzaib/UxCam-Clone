@@ -1,7 +1,9 @@
-import { getTeamMembers } from '@/lib/api';
+import { getTeamMembers, getWebhooks } from '@/lib/api';
 import TeamMembersList from '@/components/settings/TeamMembersList';
 import InviteForm from '@/components/settings/InviteForm';
 import ApiKeyCard from '@/components/settings/ApiKeyCard';
+import WebhooksList from '@/components/settings/WebhooksList';
+import WebhookForm from '@/components/settings/WebhookForm';
 import { Settings } from 'lucide-react';
 import { cookies } from 'next/headers';
 
