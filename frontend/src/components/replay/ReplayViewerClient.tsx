@@ -9,17 +9,22 @@ import { detectNetworkFailures } from '@/lib/networkDetector';
 import { detectFeedbackEvents } from '@/lib/feedbackDetector';
 import { EVENT_COLORS } from '@/lib/utils';
 import ReplayCanvas from './ReplayCanvas';
+import DOMReplayViewer from './DOMReplayViewer';
 import TimelineBar from './TimelineBar';
 import PlaybackControls from './PlaybackControls';
 import SessionInfoPanel from './SessionInfoPanel';
 
+interface DOMFrame { data: string; elapsed_ms: number; type: string; }
+
 interface ReplayViewerClientProps {
-  session: Session;
-  events: SessionEvent[];
+  session:       Session;
+  events:        SessionEvent[];
   initialSeekMs?: number;
+  domFrames?:    DOMFrame[];   // populated when session has DOM recording
 }
 
-export default function ReplayViewerClient({ session, events, initialSeekMs }: ReplayViewerClientProps) {
+export default function ReplayViewerClient({ session, events, initialSeekMs, domFrames = [] }: ReplayViewerClientProps) {
+  const hasDOMRecording = domFrames.length > 0;
   const durationMs = session.duration_ms ?? (events.length > 0 ? events[events.length - 1].elapsed_ms + 100 : 0);
 
   const { currentTimeMs, isPlaying, speed, activeEventIndex, play, pause, seek, setSpeed } =
@@ -50,16 +55,24 @@ export default function ReplayViewerClient({ session, events, initialSeekMs }: R
     <div className="space-y-4">
       {/* Main content: canvas + info panel */}
       <div className="flex gap-6 items-start">
-        {/* Canvas */}
+        {/* Canvas — DOM recording if available, fallback to event markers */}
         <div className="flex-shrink-0">
-          <ReplayCanvas
-            events={events}
-            activeEventIndex={activeEventIndex}
-            currentTimeMs={currentTimeMs}
-            networkFailures={networkFailures}
-            screenWidth={session.screen_width}
-            screenHeight={session.screen_height}
-          />
+          {hasDOMRecording ? (
+            <DOMReplayViewer
+              frames={domFrames}
+              currentTimeMs={currentTimeMs}
+              width={320}
+            />
+          ) : (
+            <ReplayCanvas
+              events={events}
+              activeEventIndex={activeEventIndex}
+              currentTimeMs={currentTimeMs}
+              networkFailures={networkFailures}
+              screenWidth={session.screen_width}
+              screenHeight={session.screen_height}
+            />
+          )}
         </div>
 
         {/* Info panel */}

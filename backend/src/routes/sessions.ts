@@ -3,6 +3,7 @@ import { requireDashboardToken } from '../middleware';
 import * as sessionsController from '../controllers/sessionsController';
 import * as annotationsController from '../controllers/sessionAnnotationsController';
 import * as bookmarkController from '../controllers/bookmarkController';
+import { getDOMFrames } from '../controllers/domSnapshotController';
 
 const router = Router();
 router.use(requireDashboardToken);
@@ -17,5 +18,6 @@ router.get('/:id', sessionsController.getSession);
 router.patch('/:id/note',     annotationsController.updateNote);
 router.patch('/:id/tags',     annotationsController.updateTags);
 router.post('/:id/bookmark',  bookmarkController.toggleBookmark);
+router.get('/:id/dom',        getDOMFrames);
 
 export default router;

@@ -6,6 +6,7 @@ import { attachErrorRecorder } from './errorRecorder';
 import { attachFreezeRecorder } from './freezeRecorder';
 import { attachNetworkRecorder } from './networkRecorder';
 import { submitFeedback, attachFeedbackWidget } from './feedbackWidget';
+import { attachDOMRecorder, DOMSnapshot, DOMMutation } from './domRecorder';
 
 let session: SessionManager | null = null;
 let transport: Transport | null = null;
@@ -14,6 +15,7 @@ let detachErrorRecorder: (() => void) | null = null;
 let detachFreezeRecorder: (() => void) | null = null;
 let detachNetworkRecorder: (() => void) | null = null;
 let detachFeedbackWidget: (() => void) | null = null;
+let detachDOMRecorder: (() => void) | null = null;
 let currentScreen = '/';
 
 function assertInitialized(): void {
@@ -69,6 +71,25 @@ export const UXClone = {
       },
       () => session!.getElapsedMs(),
       () => currentScreen
+    );
+
+    // Attach DOM snapshot recorder (full DOM capture + mutations)
+    detachDOMRecorder = attachDOMRecorder(
+      (frame: DOMSnapshot | DOMMutation) => {
+        // Send DOM frames via a separate batch to the /ingest/dom endpoint
+        const payload = {
+          sessionId:   session!.getSessionId(),
+          anonymousId: session!.getAnonymousId(),
+          apiKey:      (config as unknown as { apiKey: string }).apiKey,
+          frames:      [frame],
+        };
+        fetch(`${config.endpoint}/api/v1/ingest/dom`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify(payload),
+        }).catch(() => {});
+      },
+      () => session!.getElapsedMs()
     );
 
     // Attach DOM recorder
@@ -192,6 +213,7 @@ export const UXClone = {
     detachFreezeRecorder?.();
     detachNetworkRecorder?.();
     detachFeedbackWidget?.();
+    detachDOMRecorder?.();
     session = null;
     transport = null;
     detachRecorder = null;
@@ -199,6 +221,7 @@ export const UXClone = {
     detachFreezeRecorder = null;
     detachNetworkRecorder = null;
     detachFeedbackWidget = null;
+    detachDOMRecorder = null;
   },
 };
 
