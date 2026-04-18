@@ -22,6 +22,13 @@
   <p>Generates synthetic user interactions and sends them to the local API (<code>http://localhost:3001</code>).</p>
   <p>Status: <span id="status" class="status">Not initialized</span></p>
 
+  <h2>Configuration</h2>
+  <div style="margin-bottom: 20px;">
+    <label style="display: block; font-size: 12px; font-weight: bold; color: #64748b; margin-bottom: 4px;">API KEY</label>
+    <input type="text" id="api_key_input" value="proj_dev_key" style="width: 100%; max-width: 400px; font-family: monospace;" placeholder="Paste your proj_... key here" />
+    <p style="font-size: 11px; color: #94a3b8; margin-top: 4px;">You can find this in <b>Settings</b> > <b>API Key</b> in your dashboard.</p>
+  </div>
+
   <h2>Controls</h2>
   <button class="primary" onclick="initSDK()">Init SDK</button>
   <button onclick="generateSession()">Generate Synthetic Session</button>
@@ -46,7 +53,10 @@
     // For this harness, we inline a minimal SDK shim that calls the API directly
 
     const API = 'http://localhost:3001';
-    const API_KEY = 'proj_dev_key';
+    
+    function getApiKey() {
+      return document.getElementById('api_key_input').value.trim();
+    }
 
     function uuid() {
       return crypto.randomUUID ? crypto.randomUUID() :
@@ -93,7 +103,7 @@
       const result = await post('/api/v1/ingest/session/start', {
         sessionId,
         anonymousId,
-        apiKey: API_KEY,
+        apiKey: getApiKey(),
         startedAt,
         device: {
           type: 'desktop',
@@ -129,14 +139,14 @@
       if (events.length === 0) { log('Nothing to flush'); return; }
       const toSend = events.splice(0);
       const result = await post('/api/v1/ingest/batch', {
-        sessionId, anonymousId, apiKey: API_KEY, events: toSend,
+        sessionId, anonymousId, apiKey: getApiKey(), events: toSend,
       });
       log(`Flushed ${toSend.length} events`, result);
     }
 
     async function identifyUser() {
       const result = await post('/api/v1/ingest/identify', {
-        anonymousId, apiKey: API_KEY,
+        anonymousId, apiKey: getApiKey(),
         userId: 'test_user_001',
         traits: { name: 'Test User', email: 'test@example.com' },
       });
@@ -174,7 +184,7 @@
 
       // End session
       const result = await post('/api/v1/ingest/session/end', {
-        sessionId, apiKey: API_KEY, endedAt: Date.now(),
+        sessionId, apiKey: getApiKey(), endedAt: Date.now(),
       });
       log('Session ended', result);
       setStatus('Session ended — check dashboard!', true);
