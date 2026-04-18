@@ -32,8 +32,8 @@ export default async function SettingsPage() {
 
       // Fetch team and projects
       const [team, projects] = await Promise.all([
-        projectId ? getTeamMembers(projectId) : Promise.resolve({ members: [], invites: [] }),
-        getProjects(),
+        projectId ? getTeamMembers(projectId, token) : Promise.resolve({ members: [], invites: [] }),
+        getProjects(token),
       ]);
 
       teamData = team as any;

@@ -4,6 +4,7 @@ import SessionFilters from '@/components/sessions/SessionFilters';
 import Pagination from '@/components/ui/Pagination';
 import ExportButton from '@/components/ui/ExportButton';
 import { Suspense } from 'react';
+import { cookies } from 'next/headers';
 
 interface Props {
   searchParams: Promise<{
@@ -27,6 +28,9 @@ export default async function SessionsPage({ searchParams }: Props) {
   const page   = Math.max(1, parseInt(params.page ?? '1'));
   const tags   = params.tags ? params.tags.split(',').filter(Boolean) : undefined;
 
+  const cookieStore = await cookies();
+  const token = cookieStore.get('uxclone_token')?.value;
+
   let result = null;
   try {
     result = await getSessions({
@@ -41,7 +45,7 @@ export default async function SessionsPage({ searchParams }: Props) {
       rageClick:   params.rageClick === 'true' ? true : undefined,
       tags,
       screen:      params.screen,
-    });
+    }, token);
   } catch {
     // API not available
   }

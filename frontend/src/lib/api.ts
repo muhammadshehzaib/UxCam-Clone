@@ -75,7 +75,7 @@ export async function getSessions(params?: {
   rageClick?: boolean;
   tags?: string[];
   screen?: string;
-}): Promise<PaginatedResponse<Session>> {
+}, token?: string): Promise<PaginatedResponse<Session>> {
   const qs = new URLSearchParams();
   if (params?.page)        qs.set('page',        String(params.page));
   if (params?.limit)       qs.set('limit',       String(params.limit));
@@ -90,7 +90,9 @@ export async function getSessions(params?: {
   if (params?.tags?.length) qs.set('tags',        params.tags.join(','));
   if (params?.screen)       qs.set('screen',      params.screen);
 
-  return apiFetch<PaginatedResponse<Session>>(`/sessions?${qs}`);
+  return apiFetch<PaginatedResponse<Session>>(`/sessions?${qs}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
 }
 
 export async function getSession(id: string): Promise<Session> {
@@ -300,8 +302,10 @@ export async function regenerateApiKey(projectId: string): Promise<string> {
   return res.data.api_key;
 }
 
-export async function getProjects(): Promise<Project[]> {
-  const res = await apiFetch<{ data: Project[] }>('/projects');
+export async function getProjects(token?: string): Promise<Project[]> {
+  const res = await apiFetch<{ data: Project[] }>('/projects', {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
   return res.data;
 }
 
@@ -370,12 +374,15 @@ export async function downloadCsv(
 
 // ── Team / Members ────────────────────────────────────────────────────────────
 
-export async function getTeamMembers(projectId: string): Promise<{
+export async function getTeamMembers(projectId: string, token?: string): Promise<{
   members: TeamMember[];
   invites: PendingInvite[];
 }> {
   const res = await apiFetch<{ data: { members: TeamMember[]; invites: PendingInvite[] } }>(
-    `/projects/${projectId}/members`
+    `/projects/${projectId}/members`,
+    {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }
   );
   return res.data;
 }
