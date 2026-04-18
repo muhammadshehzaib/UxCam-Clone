@@ -31,6 +31,39 @@ services:
       timeout: 5s
       retries: 5
 
+  api:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: uxclone-api
+    env_file:
+      - .env
+    ports:
+      - '3001:3001'
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  dashboard:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: uxclone-dashboard
+    env_file:
+      - .env
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - api
+
 volumes:
   postgres_data:
   redis_data:
