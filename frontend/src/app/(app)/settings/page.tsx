@@ -14,7 +14,9 @@ export default async function SettingsPage() {
   const cookieStore = await cookies();
   const token = cookieStore.get('uxclone_token')?.value ?? '';
 
-  let teamData = { members: [], invites: [] } as { members: any[]; invites: any[] };
+  let projectId  = '';
+  let apiKey     = '';
+  let teamData   = { members: [], invites: [] } as { members: any[]; invites: any[] };
   let allProjects: any[] = [];
 
   try {
@@ -47,8 +49,10 @@ export default async function SettingsPage() {
       // Find the API key for the current project
       const currentProject = allProjects.find((p) => p.id === projectId);
       apiKey = currentProject?.api_key ?? '';
+
+      console.log(`[Dashboard] SettingsPage: token present, projectId=${projectId}, projectsFound=${allProjects.length}, apiKeyFound=${!!apiKey}`);
     } else {
-      console.warn('No token found in cookies');
+      console.warn('[Dashboard] SettingsPage: No token found in cookies');
     }
   } catch (err) {
     console.error('SettingsPage data fetch error:', err);

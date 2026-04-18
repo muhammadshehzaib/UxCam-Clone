@@ -20,7 +20,10 @@ import {
   PaginatedResponse,
 } from '@/types';
 
-const API_URL = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const isServer = typeof window === 'undefined';
+const API_URL = isServer 
+  ? (process.env.API_URL || 'http://uxclone-api:3001') 
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001');
 
 function getToken(): string {
   // Client-side: read from cookie
@@ -33,7 +36,11 @@ function getToken(): string {
 }
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}/api/v1${path}`, {
+  const token = getToken();
+  const url = `${API_URL}/api/v1${path}`;
+  console.log(`[API Fetch] URL: ${url} | Token Present: ${!!token}`);
+
+  const res = await fetch(url, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
