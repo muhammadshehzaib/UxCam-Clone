@@ -18,6 +18,7 @@ export default async function SettingsPage() {
   let apiKey     = '';
   let teamData   = { members: [], invites: [] } as { members: any[]; invites: any[] };
   let allProjects: any[] = [];
+  let fetchError = '';
 
   try {
     if (token) {
@@ -54,8 +55,9 @@ export default async function SettingsPage() {
     } else {
       console.warn('[Dashboard] SettingsPage: No token found in cookies');
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('SettingsPage data fetch error:', err);
+    fetchError = err.message || String(err);
   }
 
   let webhooks: import('@/types').Webhook[] = [];
@@ -69,10 +71,19 @@ export default async function SettingsPage() {
       <div className="flex items-center gap-3 mb-8">
         <Settings size={20} className="text-brand-500" />
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Settings <span className="text-xs font-normal text-slate-400 ml-2">V4 - Debug</span>
+          </h1>
           <p className="text-slate-500 text-sm mt-0.5">Manage your project team and configuration</p>
         </div>
       </div>
+
+      {fetchError && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          <strong>Backend Connection Error:</strong> {fetchError}
+          <p className="mt-1 text-xs opacity-70">Check dashboard logs for ECONNREFUSED details.</p>
+        </div>
+      )}
 
       <div className="space-y-6">
         {/* Team members */}

@@ -45,11 +45,11 @@ export async function listMembers(projectId: string): Promise<{
 }> {
   const [membersResult, invitesResult] = await Promise.all([
     db.query(
-      `SELECT du.id AS user_id, du.email, du.name, up.role, up.created_at AS joined_at
+      `SELECT du.id AS user_id, du.email, du.name, up.role, du.created_at AS joined_at
        FROM user_projects up
        JOIN dashboard_users du ON du.id = up.user_id
        WHERE up.project_id = $1
-       ORDER BY up.created_at ASC`,
+       ORDER BY du.created_at ASC`,
       [projectId]
     ),
     db.query(

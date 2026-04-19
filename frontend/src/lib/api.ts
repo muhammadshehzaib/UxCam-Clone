@@ -22,7 +22,7 @@ import {
 
 const isServer = typeof window === 'undefined';
 const API_URL = isServer 
-  ? (process.env.API_URL || 'http://uxclone-api:3001') 
+  ? 'http://uxclone-api:3001' 
   : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001');
 
 function getToken(): string {
@@ -35,17 +35,17 @@ function getToken(): string {
   return process.env.DASHBOARD_TOKEN ?? 'dev-dashboard-token';
 }
 
-async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const token = getToken();
+async function apiFetch<T>(path: string, options?: RequestInit & { token?: string }): Promise<T> {
+  const token = options?.token ?? getToken();
   const url = `${API_URL}/api/v1${path}`;
   console.log(`[API Fetch] URL: ${url} | Token Present: ${!!token}`);
 
   const res = await fetch(url, {
-    ...init,
+    ...options,
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`,
-      ...init?.headers,
+      Authorization: `Bearer ${token}`,
+      ...options?.headers,
     },
     cache: 'no-store',
   });
@@ -97,13 +97,20 @@ export async function getSessions(params?: {
   if (params?.tags?.length) qs.set('tags',        params.tags.join(','));
   if (params?.screen)       qs.set('screen',      params.screen);
 
-  return apiFetch<PaginatedResponse<Session>>(`/sessions?${qs}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
+  return apiFetch<PaginatedResponse<Session>>(`/sessions?${qs}`, { token });
 }
 
-export async function getSession(id: string): Promise<Session> {
-  const res = await apiFetch<{ data: Session }>(`/sessions/${id}`);
+export async function getSession(id: string, token?: string): Promise<Session> {
+  console.log(`[API:getSession] Called for id=${id}`);
+  const res = await apiFetch<{ data: Session }>(`/sessions/${id}`, { token });
+  console.log(`[API:getSession] Response received: found=${!!res.data}`);
+  return res.data;
+}
+
+export async function getSessionEvents(id: string, token?: string): Promise<SessionEvent[]> {
+  console.log(`[API:getSessionEvents] Called for id=${id}`);
+  const res = await apiFetch<{ data: SessionEvent[] }>(`/sessions/${id}/events`, { token });
+  console.log(`[API:getSessionEvents] Response received: count=${res.data?.length}`);
   return res.data;
 }
 
@@ -140,10 +147,6 @@ export async function testWebhook(id: string): Promise<void> {
   await apiFetch(`/webhooks/${id}/test`, { method: 'POST' });
 }
 
-export async function getSessionEvents(sessionId: string): Promise<SessionEvent[]> {
-  const res = await apiFetch<{ data: SessionEvent[] }>(`/sessions/${sessionId}/events`);
-  return res.data;
-}
 
 export async function updateSessionNote(sessionId: string, note: string): Promise<void> {
   await apiFetch(`/sessions/${sessionId}/note`, {
