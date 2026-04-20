@@ -100,15 +100,19 @@
       const apiKey = getApiKey();
       if (!apiKey) { log('⚠ API Key required'); return; }
 
+      // Force cleanup of any existing session to allow switching API keys/projects
+      UXClone.destroy();
+      document.getElementById('log').textContent = ''; 
+
       UXClone.init({
         endpoint: API,
         apiKey: apiKey,
         sampleRate: 1.0,
       });
 
-      log('SDK Initialized with Real DOM Recording');
+      log('SDK Initialized (Project Switch Enabled)');
       setStatus('Session active', true);
-      sessionId = 'ACTIVE'; // Simple flag for harness UI
+      sessionId = 'ACTIVE';
     }
 
     function pushEvent(ev) {

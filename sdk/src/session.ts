@@ -108,6 +108,15 @@ export class SessionManager {
     this.resetInactivityTimer();
   }
 
+  /**
+   * Wipes session identification from storage. 
+   * Useful for project switching or security resets.
+   */
+  clearPersistence(): void {
+    getPersistence()?.removeItem(SESSION_ID_KEY);
+    getPersistence()?.removeItem(SESSION_LAST_ACTIVE_KEY);
+  }
+
   async sendSessionStart(endpoint: string): Promise<void> {
     const device = detectDevice();
     device.appVersion = this.config.appVersion ?? '';

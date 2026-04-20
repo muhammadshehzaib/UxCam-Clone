@@ -218,6 +218,7 @@ export const UXClone = {
   destroy(): void {
     if (session && sdkConfig) {
       session.sendSessionEnd(sdkConfig.endpoint);
+      session.clearPersistence();
     }
     transport?.stopAutoFlush();
     transport?.flushSync();
