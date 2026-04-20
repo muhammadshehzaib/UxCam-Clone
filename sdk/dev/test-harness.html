@@ -194,7 +194,7 @@
       if (!sessionId) { log('No active session'); return; }
       await flushNow();
       const result = await post('/api/v1/ingest/session/end', {
-        sessionId, apiKey: API_KEY, endedAt: Date.now(),
+        sessionId, apiKey: getApiKey(), endedAt: Date.now(),
       });
       log('Session ended', result);
       sessionId = null;
