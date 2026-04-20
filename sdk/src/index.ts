@@ -6,7 +6,8 @@ import { attachErrorRecorder } from './errorRecorder';
 import { attachFreezeRecorder } from './freezeRecorder';
 import { attachNetworkRecorder } from './networkRecorder';
 import { submitFeedback, attachFeedbackWidget } from './feedbackWidget';
-import { attachDOMRecorder, DOMSnapshot, DOMMutation } from './domRecorder';
+import { attachDOMRecorder } from './domRecorder';
+import { DOMSnapshot, DOMMutation } from './domSerializer';
 
 let session: SessionManager | null = null;
 let transport: Transport | null = null;

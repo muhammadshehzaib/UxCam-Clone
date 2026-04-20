@@ -65,7 +65,7 @@ describe('attachFeedbackWidget', () => {
     const { push } = setup();
     const detach = attachFeedbackWidget(push, getElapsedMs, getCurrentScreen);
     const btn = document.querySelector('[data-uxclone-feedback="trigger"]');
-    expect(btn).toBeInTheDocument();
+    expect(btn).not.toBeNull();
     detach();
   });
 
@@ -74,6 +74,6 @@ describe('attachFeedbackWidget', () => {
     const detach = attachFeedbackWidget(push, getElapsedMs, getCurrentScreen);
     detach();
     const btn = document.querySelector('[data-uxclone-feedback="trigger"]');
-    expect(btn).not.toBeInTheDocument();
+    expect(btn).toBeNull();
   });
 });

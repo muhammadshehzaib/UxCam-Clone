@@ -48,9 +48,10 @@
   <h2>Log</h2>
   <div id="log"></div>
 
+  <script src="../dist/uxclone-sdk.js"></script>
   <script>
-    // Load SDK from dist — in dev, build the SDK first with `npm run build --workspace=packages/sdk`
-    // For this harness, we inline a minimal SDK shim that calls the API directly
+    // Using the real SDK from the bundle
+    const UXClone = UXCloneSDK.UXClone;
 
     const API = 'http://localhost:3001';
     
@@ -96,28 +97,16 @@
     }
 
     async function initSDK() {
-      sessionId = uuid();
-      startedAt = Date.now();
-      events.length = 0;
+      const apiKey = getApiKey();
+      if (!apiKey) { log('⚠ API Key required'); return; }
 
-      const result = await post('/api/v1/ingest/session/start', {
-        sessionId,
-        anonymousId,
-        apiKey: getApiKey(),
-        startedAt,
-        device: {
-          type: 'desktop',
-          os: 'macOS',
-          osVersion: '14.0',
-          browser: 'Chrome',
-          browserVersion: '123',
-          appVersion: '1.0.0',
-          screenWidth: window.screen.width,
-          screenHeight: window.screen.height,
-        },
+      UXClone.init({
+        endpoint: API,
+        apiKey: apiKey,
+        sampleRate: 1.0,
       });
 
-      log('Session started', { sessionId, anonymousId, result });
+      log('SDK Initialized with Real DOM Recording');
       setStatus('Session active', true);
     }
 
@@ -135,69 +124,45 @@
       pushEvent({ type: 'navigate', timestamp: Date.now(), value: path, screenName: path });
     }
 
+    async function trackEvent() {
+      UXClone.track('button_cta_clicked', { variant: 'A' });
+      log('Custom event tracked');
+    }
+
     async function flushNow() {
-      if (events.length === 0) { log('Nothing to flush'); return; }
-      const toSend = events.splice(0);
-      const result = await post('/api/v1/ingest/batch', {
-        sessionId, anonymousId, apiKey: getApiKey(), events: toSend,
-      });
-      log(`Flushed ${toSend.length} events`, result);
+      await UXClone.flush();
+      log('Manual flush triggered');
     }
 
     async function identifyUser() {
-      const result = await post('/api/v1/ingest/identify', {
-        anonymousId, apiKey: getApiKey(),
-        userId: 'test_user_001',
-        traits: { name: 'Test User', email: 'test@example.com' },
-      });
-      log('Identified user', result);
-    }
-
-    async function trackEvent() {
-      pushEvent({ type: 'custom', timestamp: Date.now(), value: 'button_cta_clicked', screenName: '/harness', metadata: { variant: 'A' } });
-      await flushNow();
+      UXClone.identify('test_user_001', { name: 'Test User', email: 'test@example.com' });
+      log('Identify called');
     }
 
     async function generateSession() {
       await initSDK();
       await new Promise(r => setTimeout(r, 200));
 
-      // Simulate a realistic user journey
-      const journey = [
-        { type: 'screen_view', value: '/', screenName: '/' },
-        { type: 'click', x: 0.5, y: 0.3, target: 'button.hero-cta', screenName: '/' },
-        { type: 'navigate', value: '/signup', screenName: '/signup' },
-        { type: 'input', target: 'input#email', value: '15', screenName: '/signup' },
-        { type: 'input', target: 'input#name', value: '8', screenName: '/signup' },
-        { type: 'click', x: 0.5, y: 0.7, target: 'button#submit', screenName: '/signup' },
-        { type: 'navigate', value: '/dashboard', screenName: '/dashboard' },
-        { type: 'scroll', value: '400', screenName: '/dashboard' },
-        { type: 'custom', value: 'signup_completed', screenName: '/dashboard', metadata: { plan: 'free' } },
-      ];
+      log('Starting synthetic journey...');
 
-      for (const step of journey) {
-        pushEvent({ ...step, timestamp: Date.now() });
-        await new Promise(r => setTimeout(r, 300 + Math.random() * 500));
-      }
+      UXClone.trackScreen('/');
+      UXClone.track('hero_cta_click', { x: 0.5, y: 0.3 });
+      
+      await new Promise(r => setTimeout(r, 1000));
+      UXClone.trackScreen('/signup');
+      log('Navigated to /signup');
 
-      await flushNow();
+      await new Promise(r => setTimeout(r, 1000));
+      UXClone.track('signup_completed', { plan: 'free' });
+      log('Journey complete');
 
-      // End session
-      const result = await post('/api/v1/ingest/session/end', {
-        sessionId, apiKey: getApiKey(), endedAt: Date.now(),
-      });
-      log('Session ended', result);
-      setStatus('Session ended — check dashboard!', true);
+      await UXClone.flush();
+      setStatus('Synthetic session sent!', true);
     }
 
     async function endSession() {
-      if (!sessionId) { log('No active session'); return; }
-      await flushNow();
-      const result = await post('/api/v1/ingest/session/end', {
-        sessionId, apiKey: getApiKey(), endedAt: Date.now(),
-      });
-      log('Session ended', result);
-      sessionId = null;
+      UXClone.destroy();
+      log('SDK Destroyed (Session ended)');
       setStatus('Session ended', true);
     }
 

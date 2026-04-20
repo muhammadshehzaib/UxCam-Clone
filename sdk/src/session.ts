@@ -66,7 +66,7 @@ export class SessionManager {
   private sessionId: string;
   private anonymousId: string;
   private startedAt: number;
-  private config: SDKConfig;
+  public config: SDKConfig;
   private inactivityTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(config: SDKConfig) {

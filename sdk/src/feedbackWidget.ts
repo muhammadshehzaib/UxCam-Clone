@@ -81,7 +81,7 @@ export function attachFeedbackWidget(
     Object.assign(title.style, { margin: '0 0 12px', fontSize: '16px', fontWeight: '600' });
 
     const textarea = document.createElement('textarea');
-    textarea.placeholder = 'What's on your mind?';
+    textarea.placeholder = "What's on your mind?";
     textarea.setAttribute('data-uxclone-feedback', 'textarea');
     Object.assign(textarea.style, {
       width: '100%', height: '100px', padding: '8px', border: '1px solid #e2e8f0',
