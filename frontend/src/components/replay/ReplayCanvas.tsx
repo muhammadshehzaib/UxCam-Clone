@@ -11,6 +11,7 @@ interface ReplayCanvasProps {
   networkFailures?: NetworkFailure[];
   screenWidth:      number | null;
   screenHeight:     number | null;
+  showBackground?:  boolean;
 }
 
 const CANVAS_WIDTH = 320;
@@ -24,6 +25,7 @@ export default function ReplayCanvas({
   networkFailures = [],
   screenWidth,
   screenHeight,
+  showBackground = true,
 }: ReplayCanvasProps) {
   const aspectRatio  = screenWidth && screenHeight ? screenHeight / screenWidth : 16 / 9;
   const canvasHeight = Math.round(CANVAS_WIDTH * aspectRatio);
@@ -66,7 +68,7 @@ export default function ReplayCanvas({
       data-testid="replay-canvas"
     >
       {/* Device screen background */}
-      <div className="absolute inset-0 bg-white" />
+      {showBackground && <div className="absolute inset-0 bg-white" />}
 
       {/* Current screen name overlay */}
       {activeEvent?.screen_name && (

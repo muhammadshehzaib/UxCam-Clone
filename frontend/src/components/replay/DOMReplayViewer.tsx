@@ -88,26 +88,35 @@ function buildNode(
 
 function applySnapshot(iframe: HTMLIFrameElement, snap: DOMSnapshot, idMap: Map<number, Node>) {
   const doc = iframe.contentDocument;
-  if (!doc) return;
+  if (!doc || !doc.documentElement) return;
   idMap.clear();
 
-  // Build the root element
-  const rootEl = buildNode(snap.node, doc, idMap);
-  if (!rootEl) return;
+  // Re-build html element
+  const sNode = snap.node;
+  const html = doc.documentElement;
+  idMap.set(sNode.id, html);
 
-  doc.open();
-  doc.write('<!DOCTYPE html>');
-  doc.close();
+  // Clear existing content
+  html.innerHTML = '';
+  
+  // Set attributes of <html>
+  if (sNode.attrs) {
+    for (const [k, v] of Object.entries(sNode.attrs)) {
+      try { html.setAttribute(k, v); } catch { /* skip */ }
+    }
+  }
 
-  // Replace html element
-  const existingHtml = doc.documentElement;
-  if (existingHtml && rootEl !== existingHtml) {
-    doc.replaceChild(rootEl, existingHtml);
+  // Build and append children (head, body, etc.)
+  if (sNode.children) {
+    for (const child of sNode.children) {
+      const childNode = buildNode(child, doc, idMap);
+      if (childNode) html.appendChild(childNode);
+    }
   }
 
   // Restore scroll
-  doc.documentElement.scrollLeft = snap.scrollX;
-  doc.documentElement.scrollTop  = snap.scrollY;
+  html.scrollLeft = snap.scrollX;
+  html.scrollTop  = snap.scrollY;
 }
 
 function applyMutation(iframe: HTMLIFrameElement, mut: DOMMutation, idMap: Map<number, Node>) {
@@ -177,6 +186,7 @@ export default function DOMReplayViewer({
   const iframeRef      = useRef<HTMLIFrameElement>(null);
   const idMapRef       = useRef<Map<number, Node>>(new Map());
   const lastFrameRef   = useRef<number>(-1);
+  const [aspectRatio, setAspectRatio] = useState(16 / 9);
 
   // Parse all frames once
   const parsedFrames = useRef<Array<DOMSnapshot | DOMMutation>>([]);
@@ -185,7 +195,11 @@ export default function DOMReplayViewer({
     parsedFrames.current = frames.map((f) => {
       try {
         const parsed = JSON.parse(f.data);
-        return { ...parsed, elapsedMs: f.elapsed_ms };
+        const elapsedMs = f.elapsed_ms;
+        if (parsed.type === 'snapshot' && parsed.width && parsed.height) {
+          setAspectRatio(parsed.height / parsed.width);
+        }
+        return { ...parsed, elapsedMs };
       } catch {
         return null;
       }
@@ -255,14 +269,14 @@ export default function DOMReplayViewer({
   return (
     <div
       className="relative rounded-2xl border-4 border-slate-700 overflow-hidden shadow-xl bg-white"
-      style={{ width }}
+      style={{ width, height: Math.round(width * aspectRatio) }}
       data-testid="dom-replay-viewer"
     >
       <iframe
         ref={iframeRef}
         title="Session replay"
         sandbox="allow-same-origin allow-scripts"
-        style={{ width: '100%', height: Math.round(width * 16 / 9), border: 'none', display: 'block' }}
+        style={{ width: '100%', height: '100%', border: 'none', display: 'block', backgroundColor: 'white' }}
         data-testid="replay-iframe"
       />
       {/* UXClone overlay — prevent user interaction with the iframe */}

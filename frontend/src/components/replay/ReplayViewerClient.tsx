@@ -55,15 +55,17 @@ export default function ReplayViewerClient({ session, events, initialSeekMs, dom
     <div className="space-y-4">
       {/* Main content: canvas + info panel */}
       <div className="flex gap-6 items-start">
-        {/* Canvas — DOM recording if available, fallback to event markers */}
-        <div className="flex-shrink-0">
-          {hasDOMRecording ? (
+        {/* Unified Replay Display: DOM Video + Interaction Overlay */}
+        <div className="flex-shrink-0 relative">
+          {hasDOMRecording && (
             <DOMReplayViewer
               frames={domFrames}
               currentTimeMs={currentTimeMs}
               width={320}
             />
-          ) : (
+          )}
+          
+          <div className={hasDOMRecording ? "absolute inset-0 z-10 pointer-events-none" : ""}>
             <ReplayCanvas
               events={events}
               activeEventIndex={activeEventIndex}
@@ -71,8 +73,10 @@ export default function ReplayViewerClient({ session, events, initialSeekMs, dom
               networkFailures={networkFailures}
               screenWidth={session.screen_width}
               screenHeight={session.screen_height}
+              // Hide background if DOM recording is present to see the video underneath
+              showBackground={!hasDOMRecording}
             />
-          )}
+          </div>
         </div>
 
         {/* Info panel */}

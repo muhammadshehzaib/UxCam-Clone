@@ -95,12 +95,28 @@ function hasMaskAttr(el: Element): boolean {
 
 function sanitizeAttrs(el: Element): Record<string, string> {
   const result: Record<string, string> = {};
+  const baseUrl = window.location.origin;
+
   for (const { name, value } of Array.from(el.attributes)) {
-    if (DANGEROUS_ATTR.test(name)) continue;                   // strip event handlers
+    if (DANGEROUS_ATTR.test(name)) continue; // strip event handlers
     if (name === 'href' && value.trimStart().startsWith('javascript:')) continue;
-    result[name] = value.length > MAX_ATTR_LENGTH
-      ? value.slice(0, MAX_ATTR_LENGTH) + '…'
-      : value;
+
+    let finalValue = value;
+
+    // Resolve relative URLs to absolute so they load correctly in the dashboard
+    if (name === 'src' || name === 'href' || name === 'poster') {
+      if (value && !value.startsWith('http') && !value.startsWith('//') && !value.startsWith('data:')) {
+        try {
+          finalValue = new URL(value, window.location.href).href;
+        } catch {
+          /* fallback to original */
+        }
+      }
+    }
+
+    result[name] = finalValue.length > MAX_ATTR_LENGTH
+      ? finalValue.slice(0, MAX_ATTR_LENGTH) + '…'
+      : finalValue;
   }
   return result;
 }
@@ -126,7 +142,8 @@ export function serializeNode(node: Node): SerializedNode | null {
       const parent = node.parentElement;
       if (parent) {
         const tag = parent.tagName.toLowerCase();
-        if (tag === 'script' || tag === 'style') return null;
+        if (tag === 'script') return null; // Skip scripts
+        // We DO capture text inside <style> tags (the CSS content)
       }
       return { id, type: 3, textContent: text };
     }
