@@ -63,7 +63,9 @@ export default function ReplayCanvas({
 
   return (
     <div
-      className="relative bg-slate-800 rounded-2xl overflow-hidden border-4 border-slate-700 shadow-xl"
+      className={`relative rounded-2xl overflow-hidden border-4 border-slate-700 shadow-xl ${
+        showBackground ? 'bg-slate-800' : 'bg-transparent'
+      }`}
       style={{ width: CANVAS_WIDTH, height: canvasHeight }}
       data-testid="replay-canvas"
     >

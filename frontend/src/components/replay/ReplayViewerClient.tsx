@@ -81,7 +81,7 @@ export default function ReplayViewerClient({ session, events, initialSeekMs, dom
 
         {/* Info panel */}
         <div className="flex-1 min-w-0">
-          <SessionInfoPanel session={session} />
+          <SessionInfoPanel session={session} calculatedDurationMs={durationMs} />
 
           {/* Event log — shows last few events */}
           <div className="mt-4 bg-white rounded-xl border border-slate-200 p-4">

@@ -222,6 +222,11 @@ export default function DOMReplayViewer({
       else break;
     }
 
+    if (targetIdx < 0 && allFrames.length > 0) {
+      // Fallback: show the very first frame even if it's slightly after currentTimeMs
+      targetIdx = 0;
+    }
+    
     if (targetIdx < 0) return;
 
     // If we seeked backwards or haven't started, rebuild from last snapshot

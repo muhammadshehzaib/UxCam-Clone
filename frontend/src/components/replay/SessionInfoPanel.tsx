@@ -5,6 +5,7 @@ import BookmarkButton from '@/components/sessions/BookmarkButton';
 
 interface SessionInfoPanelProps {
   session: Session;
+  calculatedDurationMs?: number;
 }
 
 function InfoRow({ label, value }: { label: string; value: string | number | null | undefined }) {
@@ -16,7 +17,9 @@ function InfoRow({ label, value }: { label: string; value: string | number | nul
   );
 }
 
-export default function SessionInfoPanel({ session }: SessionInfoPanelProps) {
+export default function SessionInfoPanel({ session, calculatedDurationMs }: SessionInfoPanelProps) {
+  const duration = session.duration_ms ?? calculatedDurationMs;
+  
   return (
     <div className="bg-slate-50 rounded-xl border border-slate-200 p-5">
       <div className="flex items-center justify-between mb-4">
@@ -29,7 +32,7 @@ export default function SessionInfoPanel({ session }: SessionInfoPanelProps) {
         <InfoRow label="Session ID" value={session.id.slice(0, 8) + '…'} />
         <InfoRow label="User" value={session.external_id ?? session.anonymous_id.slice(0, 12) + '…'} />
         <InfoRow label="Started" value={formatDateTime(session.started_at)} />
-        <InfoRow label="Duration" value={formatMs(session.duration_ms)} />
+        <InfoRow label="Duration" value={formatMs(duration)} />
         <InfoRow label="Events" value={session.event_count} />
         <div className="border-t border-slate-200 pt-3 mt-3">
           <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Device</h4>
