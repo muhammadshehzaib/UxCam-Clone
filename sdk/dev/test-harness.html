@@ -108,6 +108,7 @@
 
       log('SDK Initialized with Real DOM Recording');
       setStatus('Session active', true);
+      sessionId = 'ACTIVE'; // Simple flag for harness UI
     }
 
     function pushEvent(ev) {
@@ -164,20 +165,11 @@
       UXClone.destroy();
       log('SDK Destroyed (Session ended)');
       setStatus('Session ended', true);
+      sessionId = null;
     }
 
-    // Auto-capture real clicks for demo
-    document.addEventListener('click', (e) => {
-      if (!sessionId) return;
-      if (e.target.onclick) return; // Skip button clicks handled above
-      pushEvent({
-        type: 'click', timestamp: Date.now(),
-        x: e.clientX / window.innerWidth,
-        y: e.clientY / window.innerHeight,
-        target: e.target.tagName.toLowerCase(),
-        screenName: '/harness',
-      });
-    });
+    // Note: The real SDK handles click/input/scroll capture automatically.
+    // Use the simulate buttons above to test custom events.
 
     log('Test harness loaded. Click "Init SDK" to start a session.');
   </script>

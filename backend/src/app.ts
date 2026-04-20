@@ -21,13 +21,17 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
-// Simple request logger
-app.use((req, _res, next) => {
-  console.log(`${new Date().toISOString()} ${req.method} ${req.url}`);
+// Request logger showing method, URL, and status code
+app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`${new Date().toISOString()} ${req.method} ${req.url} ${res.statusCode} - ${duration}ms`);
+  });
   next();
 });
 
-app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+app.get('/health', (_req: express.Request, res: express.Response) => res.json({ status: 'ok' }));
 
 app.use('/api/v1/ingest', ingestRouter);
 app.use('/api/v1/sessions/:sessionId/events', eventsRouter);

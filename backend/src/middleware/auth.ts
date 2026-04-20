@@ -62,12 +62,27 @@ export async function requireDashboardToken(
 
   // ── Backward compat: static dev token ──────────────────────────────────────
   if (token === config.dashboardToken) {
-    req.project = {
-      id:     '00000000-0000-0000-0000-000000000001',
-      name:   'Dev Project',
-      apiKey: 'proj_dev_key',
-    };
-    req.user = { id: '00000000-0000-0000-0000-000000000002', email: 'dev@uxclone.local' };
+    const result = await db.query(
+      'SELECT id, name, api_key FROM projects ORDER BY created_at DESC LIMIT 1'
+    );
+
+    if (result.rows.length > 0) {
+      req.project = {
+        id:     result.rows[0].id,
+        name:   result.rows[0].name,
+        apiKey: result.rows[0].api_key,
+      };
+      req.user = { id: '00000000-0000-0000-0000-000000000002', email: 'dev@uxclone.local' };
+      console.log(`[AUTH] Dev Token: Resolved to latest project "${req.project.name}" (${req.project.id})`);
+    } else {
+      // Fallback if no projects exist yet
+      req.project = {
+        id:     '00000000-0000-0000-0000-000000000001',
+        name:   'Dev Project',
+        apiKey: 'proj_dev_key',
+      };
+      req.user = { id: '00000000-0000-0000-0000-000000000002', email: 'dev@uxclone.local' };
+    }
     next();
     return;
   }
@@ -82,6 +97,7 @@ export async function requireDashboardToken(
     );
 
     if (result.rows.length === 0) {
+      console.warn(`[AUTH] Project not found for decoded projectId: ${decoded.projectId}`);
       res.status(401).json({ error: 'Unauthorized' });
       return;
     }
@@ -93,8 +109,10 @@ export async function requireDashboardToken(
     };
     req.user = { id: decoded.sub, email: decoded.email };
 
+    console.log(`[AUTH] Resolved via JWT to Project: ${req.project.name} (${req.project.id})`);
     next();
-  } catch {
+  } catch (err) {
+    console.error(`[AUTH] JWT verification failed:`, err);
     res.status(401).json({ error: 'Unauthorized' });
   }
 }

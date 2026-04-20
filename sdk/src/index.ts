@@ -18,6 +18,7 @@ let detachNetworkRecorder: (() => void) | null = null;
 let detachFeedbackWidget: (() => void) | null = null;
 let detachDOMRecorder: (() => void) | null = null;
 let currentScreen = '/';
+let sdkConfig: SDKConfig | null = null;
 
 function assertInitialized(): void {
   if (!session || !transport) {
@@ -30,10 +31,18 @@ export const UXClone = {
    * Initialize the SDK. Call once, early in your app boot sequence.
    */
   init(config: SDKConfig): void {
+    // Prevent double initialization
+    if (session || transport) {
+      console.warn('UXClone: already initialized. Call destroy() first if you want to re-init.');
+      return;
+    }
+
     // Respect sample rate
     if (config.sampleRate !== undefined && config.sampleRate < 1) {
       if (Math.random() > config.sampleRate) return;
     }
+
+    sdkConfig = config;
 
     session = new SessionManager(config);
     transport = new Transport(
@@ -207,6 +216,9 @@ export const UXClone = {
    * Tear down the SDK (useful in tests or hot-reload scenarios).
    */
   destroy(): void {
+    if (session && sdkConfig) {
+      session.sendSessionEnd(sdkConfig.endpoint);
+    }
     transport?.stopAutoFlush();
     transport?.flushSync();
     detachRecorder?.();
