@@ -38,7 +38,7 @@ export default function ReplayCanvas({
     const clicks = events
       .slice(0, activeEventIndex + 1)
       .filter((e) => e.type === 'click' && e.x !== null && e.y !== null)
-      .slice(-5);
+      .slice(-10);
     return clicks.map((e, i, arr) => ({
       ...e,
       opacity: arr.length > 1 ? 0.2 + (0.6 * (i / (arr.length - 1))) : 0.8,
@@ -78,7 +78,7 @@ export default function ReplayCanvas({
       )}
 
       {/* Click trail — fading dots of recent clicks */}
-      {clickTrail.slice(0, -1).map((click, i) => (
+      {clickTrail.slice(0, -1).map((click: any, i: number) => (
         click.x != null && click.y != null ? (
           <div
             key={`trail-${click.id}-${i}`}
@@ -118,7 +118,7 @@ export default function ReplayCanvas({
       {isInputEvent && activeEvent?.target && (
         <div className="absolute bottom-2 left-2 right-2 pointer-events-none z-20">
           <div className="bg-slate-900/80 text-white text-xs px-2 py-1 rounded-lg truncate" data-testid="input-indicator">
-            ⌨ {activeEvent.target}
+            ⌨ {activeEvent.target}: <span className="text-amber-400">{activeEvent.value || ''}</span>
           </div>
         </div>
       )}

@@ -94,7 +94,7 @@ export function attachRecorder(
       timestamp: Date.now(),
       elapsedMs: getElapsedMs(),
       target: sanitizeSelector(target),
-      value: String(target.value?.length ?? 0), // length only, not value
+      value: target.value, // Captured actual value
       screenName: getCurrentScreen(),
     });
   });

@@ -203,5 +203,5 @@ export function takeSnapshot(elapsedMs: number): DOMSnapshot {
  */
 export function getMaskedInputValue(el: HTMLInputElement | HTMLTextAreaElement): string {
   if (isSensitiveInput(el)) return '***';
-  return el.value ? `[${el.value.length} chars]` : '';
+  return el.value || '';
 }
