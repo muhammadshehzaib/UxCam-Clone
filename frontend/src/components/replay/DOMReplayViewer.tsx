@@ -304,8 +304,7 @@ export default function DOMReplayViewer({
 
   return (
     <div
-      className="relative rounded-2xl border-4 border-slate-700 overflow-hidden shadow-xl bg-white"
-      style={{ width, height: Math.round(width * aspectRatio) }}
+      className="w-full h-full"
       data-testid="dom-replay-viewer"
     >
       <iframe

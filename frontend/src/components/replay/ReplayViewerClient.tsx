@@ -56,7 +56,11 @@ export default function ReplayViewerClient({ session, events, initialSeekMs, dom
       {/* Main content: canvas + info panel */}
       <div className="flex flex-wrap gap-6 items-start">
         {/* Unified Replay Display: DOM Video + Interaction Overlay */}
-        <div className="flex-shrink-0 relative">
+        {/* Unified Replay Display: DOM Video + Interaction Overlay */}
+        <div 
+          className="flex-shrink-0 relative rounded-2xl border-4 border-slate-800 overflow-hidden shadow-2xl bg-white"
+          style={{ width: 1000, height: 600 }}
+        >
           {hasDOMRecording && (
             <DOMReplayViewer
               frames={domFrames}

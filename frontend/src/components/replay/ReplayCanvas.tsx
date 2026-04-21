@@ -29,9 +29,6 @@ export default function ReplayCanvas({
   showBackground = true,
   width = DEFAULT_WIDTH,
 }: ReplayCanvasProps) {
-  const aspectRatio  = screenWidth && screenHeight ? screenHeight / screenWidth : 16 / 9;
-  const canvasHeight = Math.round(width * aspectRatio);
-
   const activeEvent = useMemo(
     () => (activeEventIndex >= 0 ? events[activeEventIndex] : null),
     [events, activeEventIndex]
@@ -69,8 +66,8 @@ export default function ReplayCanvas({
     return null;
   }, [events, activeEventIndex, currentTimeMs]);
 
-  const tapX = activeEvent?.x != null ? activeEvent.x * width : null;
-  const tapY = activeEvent?.y != null ? activeEvent.y * canvasHeight : null;
+  const tapX = activeEvent?.x != null ? activeEvent.x * 1000 : null;
+  const tapY = activeEvent?.y != null ? activeEvent.y * 600 : null;
   const isPointerEvent = activeEvent?.type === 'click';
   const isScrollEvent  = activeEvent?.type === 'scroll';
   const isInputEvent   = !!activeInputEvent;
@@ -78,10 +75,7 @@ export default function ReplayCanvas({
 
   return (
     <div
-      className={`relative rounded-2xl overflow-hidden border-4 border-slate-700 shadow-xl ${
-        showBackground ? 'bg-slate-800' : 'bg-transparent'
-      }`}
-      style={{ width: width, height: canvasHeight }}
+      className="relative w-full h-full overflow-hidden"
       data-testid="replay-canvas"
     >
       {/* Device screen background */}
@@ -104,8 +98,8 @@ export default function ReplayCanvas({
             data-testid="click-trail-dot"
             className="absolute pointer-events-none rounded-full border-2 border-white"
             style={{
-              left:            click.x * width,
-              top:             click.y * canvasHeight,
+              left:            click.x * 1000,
+              top:             click.y * 600,
               transform:       'translate(-50%, -50%)',
               width:           10,
               height:          10,
