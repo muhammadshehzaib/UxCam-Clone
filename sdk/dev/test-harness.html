@@ -50,8 +50,16 @@
 
   <script src="../dist/uxclone-sdk.js"></script>
   <script>
-    // Using the real SDK from the bundle
-    const UXClone = UXCloneSDK.UXClone;
+    // Verify SDK is loaded
+    if (typeof UXCloneSDK === 'undefined') {
+      console.error('UXCloneSDK bundle not found. Did you run "npm run bundle"?');
+      document.addEventListener('DOMContentLoaded', () => {
+        log('❌ SDK Bundle Error: "uxclone-sdk.js" not found. Run "npm run bundle" in the sdk directory.');
+        setStatus('Bundle missing', false);
+      });
+    }
+
+    const UXClone = typeof UXCloneSDK !== 'undefined' ? UXCloneSDK.UXClone : null;
 
     const API = 'http://localhost:3001';
     
@@ -76,6 +84,7 @@
 
     function log(msg, data) {
       const el = document.getElementById('log');
+      if (!el) return;
       const time = new Date().toLocaleTimeString();
       el.textContent += `[${time}] ${msg}${data ? '\n' + JSON.stringify(data, null, 2) : ''}\n\n`;
       el.scrollTop = el.scrollHeight;
@@ -83,6 +92,7 @@
 
     function setStatus(text, ok) {
       const el = document.getElementById('status');
+      if (!el) return;
       el.textContent = text;
       el.className = 'status ' + (ok ? 'ok' : 'error');
     }
@@ -100,19 +110,36 @@
       const apiKey = getApiKey();
       if (!apiKey) { log('⚠ API Key required'); return; }
 
-      // Force cleanup of any existing session to allow switching API keys/projects
-      UXClone.destroy();
-      document.getElementById('log').textContent = ''; 
+      if (!UXClone) {
+        log('❌ Cannot initialize: SDK bundle not loaded.');
+        setStatus('SDK Load Error', false);
+        return;
+      }
 
-      UXClone.init({
-        endpoint: API,
-        apiKey: apiKey,
-        sampleRate: 1.0,
-      });
+      try {
+        // Force cleanup of any existing session to allow switching API keys/projects
+        UXClone.destroy();
+        document.getElementById('log').textContent = ''; 
 
-      log('SDK Initialized (Project Switch Enabled)');
-      setStatus('Session active', true);
-      sessionId = 'ACTIVE';
+        UXClone.init({
+          endpoint: API,
+          apiKey: apiKey,
+          sampleRate: 1.0,
+        });
+
+        log('SDK Initialized (Project Switch Enabled)');
+        setStatus('Session active', true);
+        sessionId = 'ACTIVE';
+
+        // Check if API Key looks suspicious (common typo 1 vs i)
+        if (apiKey.endsWith('19')) {
+          log('💡 Tip: Your API key ends in "19". If it doesn\'t work, check if it should be "i9".');
+        }
+
+      } catch (err) {
+        log('❌ Initialization failed', err.message);
+        setStatus('Init failed', false);
+      }
     }
 
     function pushEvent(ev) {

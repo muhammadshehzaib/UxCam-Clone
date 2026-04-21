@@ -54,11 +54,24 @@ export default function ReplayCanvas({
     ) ?? null;
   }, [networkFailures, currentTimeMs]);
 
+  // Input persistence — show the last input for 2 seconds
+  const activeInputEvent = useMemo(() => {
+    const lastInput = events
+      .slice(0, activeEventIndex + 1)
+      .reverse()
+      .find(e => e.type === 'input');
+    
+    if (lastInput && currentTimeMs - lastInput.elapsed_ms < 2000) {
+      return lastInput;
+    }
+    return null;
+  }, [events, activeEventIndex, currentTimeMs]);
+
   const tapX = activeEvent?.x != null ? activeEvent.x * CANVAS_WIDTH : null;
   const tapY = activeEvent?.y != null ? activeEvent.y * canvasHeight : null;
-  const isPointerEvent = activeEvent?.type === 'click' || activeEvent?.type === 'input';
+  const isPointerEvent = activeEvent?.type === 'click';
   const isScrollEvent  = activeEvent?.type === 'scroll';
-  const isInputEvent   = activeEvent?.type === 'input';
+  const isInputEvent   = !!activeInputEvent;
   const eventColor     = activeEvent ? (EVENT_COLORS[activeEvent.type] ?? '#6366f1') : '#6366f1';
 
   return (
@@ -119,10 +132,12 @@ export default function ReplayCanvas({
       )}
 
       {/* Keyboard input indicator */}
-      {isInputEvent && activeEvent?.target && (
+      {isInputEvent && activeInputEvent?.target && (
         <div className="absolute bottom-2 left-2 right-2 pointer-events-none z-20">
-          <div className="bg-slate-900/80 text-white text-xs px-2 py-1 rounded-lg truncate" data-testid="input-indicator">
-            ⌨ {activeEvent.target}: <span className="text-amber-400">{activeEvent.value || ''}</span>
+          <div className="bg-slate-900/80 text-white text-xs px-2 py-1 rounded-lg shadow-lg border border-white/20 animate-in fade-in slide-in-from-bottom-1 duration-300" data-testid="input-indicator">
+            <span className="opacity-70 mr-1">⌨</span>
+            <span className="font-semibold">{activeInputEvent.target}</span>: 
+            <span className="text-amber-400 ml-1 font-mono">{activeInputEvent.value || ''}</span>
           </div>
         </div>
       )}

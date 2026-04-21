@@ -62,6 +62,7 @@ export default function ReplayViewerClient({ session, events, initialSeekMs, dom
               frames={domFrames}
               currentTimeMs={currentTimeMs}
               width={320}
+              initialAspectRatio={session.screen_width && session.screen_height ? session.screen_height / session.screen_width : 16 / 9}
             />
           )}
           

@@ -59,17 +59,27 @@ function buildNode(
       break;
     case 1: { // ELEMENT
       const tag = sNode.tagName ?? 'div';
-      try { node = doc.createElement(tag); } catch { node = doc.createElement('div'); }
+      try { 
+        node = doc.createElement(tag); 
+      } catch (e) { 
+        console.warn(`[UXClone] Failed to create element <${tag}>:`, e);
+        node = doc.createElement('div'); 
+      }
+      
       const el = node as Element;
 
       if (sNode.attrs) {
         for (const [k, v] of Object.entries(sNode.attrs)) {
-          try { el.setAttribute(k, v); } catch { /* skip invalid attrs */ }
+          try { 
+            // Disallow script/event attributes for security and stability
+            if (k.toLowerCase().startsWith('on')) continue;
+            el.setAttribute(k, v); 
+          } catch { /* skip invalid attrs */ }
         }
       }
 
       if (sNode.isMasked) {
-        el.innerHTML = '<span style="background:#e2e8f0;color:#94a3b8;padding:2px 6px;border-radius:4px;font-size:12px;">🔒 masked</span>';
+        el.innerHTML = '<span style="background:#e2e8f0;color:#94a3b8;padding:2px 6px;border-radius:4px;font-size:12px;font-family:sans-serif;">🔒 masked</span>';
       } else if (sNode.children) {
         for (const child of sNode.children) {
           const childNode = buildNode(child, doc, idMap);
@@ -89,15 +99,24 @@ function buildNode(
 function applySnapshot(iframe: HTMLIFrameElement, snap: DOMSnapshot, idMap: Map<number, Node>) {
   const doc = iframe.contentDocument;
   if (!doc || !doc.documentElement) return;
+  
+  // Clear the map and the document
   idMap.clear();
-
-  // Re-build html element
-  const sNode = snap.node;
   const html = doc.documentElement;
-  idMap.set(sNode.id, html);
+  
+  // Clean up existing content safely
+  while (html.firstChild) {
+    html.removeChild(html.firstChild);
+  }
+  
+  // Reset attributes
+  while (html.attributes.length > 0) {
+    html.removeAttribute(html.attributes[0].name);
+  }
 
-  // Clear existing content
-  html.innerHTML = '';
+  // Re-map the html element
+  const sNode = snap.node;
+  idMap.set(sNode.id, html);
   
   // Set attributes of <html>
   if (sNode.attrs) {
@@ -114,9 +133,13 @@ function applySnapshot(iframe: HTMLIFrameElement, snap: DOMSnapshot, idMap: Map<
     }
   }
 
-  // Restore scroll
-  html.scrollLeft = snap.scrollX;
-  html.scrollTop  = snap.scrollY;
+  // Restore scroll position
+  setTimeout(() => {
+    if (doc.documentElement) {
+      doc.documentElement.scrollLeft = snap.scrollX;
+      doc.documentElement.scrollTop  = snap.scrollY;
+    }
+  }, 0);
 }
 
 function applyMutation(iframe: HTMLIFrameElement, mut: DOMMutation, idMap: Map<number, Node>) {
@@ -173,20 +196,22 @@ function applyMutation(iframe: HTMLIFrameElement, mut: DOMMutation, idMap: Map<n
 // ── Main component ────────────────────────────────────────────────────────────
 
 interface DOMReplayViewerProps {
-  frames:       DOMFrame[];
-  currentTimeMs: number;
-  width?:       number;
+  frames:             DOMFrame[];
+  currentTimeMs:      number;
+  width?:             number;
+  initialAspectRatio?: number;
 }
 
 export default function DOMReplayViewer({
   frames,
   currentTimeMs,
   width = 390,
+  initialAspectRatio = 16 / 9,
 }: DOMReplayViewerProps) {
   const iframeRef      = useRef<HTMLIFrameElement>(null);
   const idMapRef       = useRef<Map<number, Node>>(new Map());
   const lastFrameRef   = useRef<number>(-1);
-  const [aspectRatio, setAspectRatio] = useState(16 / 9);
+  const [aspectRatio, setAspectRatio] = useState(initialAspectRatio);
 
   // Parse all frames once
   const parsedFrames = useRef<Array<DOMSnapshot | DOMMutation>>([]);
@@ -233,13 +258,19 @@ export default function DOMReplayViewer({
     const lastApplied = lastFrameRef.current;
     let startIdx = lastApplied + 1;
 
-    if (targetIdx < lastApplied) {
-      // Seeked backward — find the latest snapshot at or before targetIdx
+    if (targetIdx < lastApplied || lastApplied < 0) {
+      // Seeked backward or first run — find the latest snapshot at or before targetIdx
       let snapshotIdx = -1;
       for (let i = targetIdx; i >= 0; i--) {
         if (allFrames[i].type === 'snapshot') { snapshotIdx = i; break; }
       }
-      if (snapshotIdx < 0) return;
+      
+      if (snapshotIdx < 0) {
+        // If no snapshot found at or before targetIdx, we can't render correctly yet.
+        // This happens if the session didn't capture an initial snapshot.
+        return;
+      }
+
       applySnapshot(iframe, allFrames[snapshotIdx] as DOMSnapshot, idMapRef.current);
       startIdx = snapshotIdx + 1;
     }

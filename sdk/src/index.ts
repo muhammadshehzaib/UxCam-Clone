@@ -51,69 +51,76 @@ export const UXClone = {
       () => session!.getAnonymousId()
     );
 
-    // Send session start to API
-    void session.sendSessionStart(config.endpoint);
+    // Send session start to API and only then attach recorders to prevent race conditions
+    session.sendSessionStart(config.endpoint).then(() => {
+      if (!session || !transport) return; // check if destroyed in the meantime
 
-    // Attach error recorder (before DOM recorder so crashes on init are caught)
-    detachErrorRecorder = attachErrorRecorder(
-      (event: SDKEvent) => {
-        session!.touch();
-        transport!.push(event);
-      },
-      () => session!.getElapsedMs(),
-      () => currentScreen
-    );
+      // Attach error recorder (before DOM recorder so crashes on init are caught)
+      detachErrorRecorder = attachErrorRecorder(
+        (event: SDKEvent) => {
+          session!.touch();
+          transport!.push(event);
+        },
+        () => session!.getElapsedMs(),
+        () => currentScreen
+      );
 
-    // Attach network recorder — captures failed fetch/XHR (status ≥400)
-    detachNetworkRecorder = attachNetworkRecorder(
-      (event: SDKEvent) => {
-        transport!.push(event);
-      },
-      () => session!.getElapsedMs(),
-      () => currentScreen,
-      config.endpoint
-    );
+      // Attach network recorder — captures failed fetch/XHR (status ≥400)
+      detachNetworkRecorder = attachNetworkRecorder(
+        (event: SDKEvent) => {
+          transport!.push(event);
+        },
+        () => session!.getElapsedMs(),
+        () => currentScreen,
+        config.endpoint
+      );
 
-    // Attach freeze recorder — detects main thread blocks ≥500ms
-    detachFreezeRecorder = attachFreezeRecorder(
-      (event: SDKEvent) => {
-        transport!.push(event);
-      },
-      () => session!.getElapsedMs(),
-      () => currentScreen
-    );
+      // Attach freeze recorder — detects main thread blocks ≥500ms
+      detachFreezeRecorder = attachFreezeRecorder(
+        (event: SDKEvent) => {
+          transport!.push(event);
+        },
+        () => session!.getElapsedMs(),
+        () => currentScreen
+      );
 
-    // Attach DOM snapshot recorder (full DOM capture + mutations)
-    detachDOMRecorder = attachDOMRecorder(
-      (frame: DOMSnapshot | DOMMutation) => {
-        // Send DOM frames via a separate batch to the /ingest/dom endpoint
-        const payload = {
-          sessionId:   session!.getSessionId(),
-          anonymousId: session!.getAnonymousId(),
-          apiKey:      (config as unknown as { apiKey: string }).apiKey,
-          frames:      [frame],
-        };
-        fetch(`${config.endpoint}/api/v1/ingest/dom`, {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify(payload),
-        }).catch(() => {});
-      },
-      () => session!.getElapsedMs()
-    );
+      // Attach DOM snapshot recorder (full DOM capture + mutations)
+      detachDOMRecorder = attachDOMRecorder(
+        (frame: DOMSnapshot | DOMMutation) => {
+          // Send DOM frames via a separate batch to the /ingest/dom endpoint
+          const payload = {
+            sessionId:   session!.getSessionId(),
+            anonymousId: session!.getAnonymousId(),
+            apiKey:      (config as unknown as { apiKey: string }).apiKey,
+            frames:      [frame],
+          };
+          fetch(`${config.endpoint}/api/v1/ingest/dom`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(payload),
+          }).catch(() => {});
+        },
+        () => session!.getElapsedMs()
+      );
 
-    // Attach DOM recorder
-    detachRecorder = attachRecorder(
-      (event: SDKEvent) => {
-        session!.touch();
-        transport!.push(event);
-      },
-      () => session!.getElapsedMs(),
-      () => currentScreen
-    );
+      // Attach DOM recorder
+      detachRecorder = attachRecorder(
+        (event: SDKEvent) => {
+          session!.touch();
+          transport!.push(event);
+        },
+        () => session!.getElapsedMs(),
+        () => currentScreen
+      );
 
-    // Start auto-flush
-    transport.startAutoFlush();
+      // Start auto-flush
+      transport.startAutoFlush();
+
+      // Track initial screen
+      currentScreen = window.location.pathname;
+    }).catch((err) => {
+      console.error('UXClone: failed to start session', err);
+    });
 
     // Flush on page hide
     window.addEventListener('visibilitychange', () => {
@@ -121,9 +128,6 @@ export const UXClone = {
         transport!.flushSync();
       }
     });
-
-    // Track initial screen
-    currentScreen = window.location.pathname;
   },
 
   /**
