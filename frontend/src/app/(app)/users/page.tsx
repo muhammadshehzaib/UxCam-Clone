@@ -1,9 +1,10 @@
 import { getUsers } from '@/lib/api';
 import { AppUser } from '@/types';
-import { formatDateTime, truncate } from '@/lib/utils';
+import { truncate } from '@/lib/utils';
 import Link from 'next/link';
 import Pagination from '@/components/ui/Pagination';
 import ExportButton from '@/components/ui/ExportButton';
+import LocalDate from '@/components/ui/LocalDate';
 import TraitFilter from '@/components/users/TraitFilter';
 import { Suspense } from 'react';
 
@@ -27,6 +28,9 @@ export default async function UsersPage({ searchParams }: Props) {
   const params = await searchParams;
   const page   = Math.max(1, parseInt(params.page ?? '1'));
 
+  const traitKeys = params.traitKey ? (Array.isArray(params.traitKey) ? params.traitKey : [params.traitKey]) : [];
+  const traitVals = params.traitVal ? (Array.isArray(params.traitVal) ? params.traitVal : [params.traitVal]) : [];
+
   let result = null;
   try {
     result = await getUsers({
@@ -48,8 +52,6 @@ export default async function UsersPage({ searchParams }: Props) {
   const total      = result?.meta.total ?? 0;
   const totalPages = Math.ceil(total / 20);
 
-  const traitKeys = params.traitKey ? (Array.isArray(params.traitKey) ? params.traitKey : [params.traitKey]) : [];
-  const traitVals = params.traitVal ? (Array.isArray(params.traitVal) ? params.traitVal : [params.traitVal]) : [];
   const isFiltered  = !!(params.device || params.os || params.browser || params.minDuration || params.rageClick || traitKeys.length);
   const isSearching = !!params.search;
 
@@ -164,8 +166,8 @@ export default async function UsersPage({ searchParams }: Props) {
                       )}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{formatDateTime(u.first_seen_at)}</td>
-                  <td className="px-4 py-3 text-slate-600">{formatDateTime(u.last_seen_at)}</td>
+                  <td className="px-4 py-3 text-slate-600"><LocalDate date={u.first_seen_at} /></td>
+                  <td className="px-4 py-3 text-slate-600"><LocalDate date={u.last_seen_at} /></td>
                   <td className="px-4 py-3 text-slate-600">{u.session_count}</td>
                 </tr>
               ))}

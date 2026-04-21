@@ -1,11 +1,11 @@
 import { getUser, getUserSessions } from '@/lib/api';
 import SessionTable from '@/components/sessions/SessionTable';
 import Pagination from '@/components/ui/Pagination';
-import { formatDateTime } from '@/lib/utils';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { Suspense } from 'react';
+import LocalDate from '@/components/ui/LocalDate';
 
 interface Props {
   params:       Promise<{ id: string }>;
@@ -76,11 +76,11 @@ export default async function UserDetailPage({ params, searchParams }: Props) {
           </div>
           <div>
             <dt className="text-slate-500 text-xs mb-1">First Seen</dt>
-            <dd className="font-medium text-slate-800">{formatDateTime(user.first_seen_at)}</dd>
+            <dd className="font-medium text-slate-800"><LocalDate date={user.first_seen_at} /></dd>
           </div>
           <div>
             <dt className="text-slate-500 text-xs mb-1">Last Seen</dt>
-            <dd className="font-medium text-slate-800">{formatDateTime(user.last_seen_at)}</dd>
+            <dd className="font-medium text-slate-800"><LocalDate date={user.last_seen_at} /></dd>
           </div>
         </dl>
       </div>

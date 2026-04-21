@@ -1,14 +1,15 @@
 import { Session } from '@/types';
-import { formatDateTime, formatMs, getDeviceIcon } from '@/lib/utils';
+import { formatMs, getDeviceIcon } from '@/lib/utils';
 import SessionNoteEditor from './SessionNoteEditor';
 import BookmarkButton from '@/components/sessions/BookmarkButton';
+import LocalDate from '@/components/ui/LocalDate';
 
 interface SessionInfoPanelProps {
   session: Session;
   calculatedDurationMs?: number;
 }
 
-function InfoRow({ label, value }: { label: string; value: string | number | null | undefined }) {
+function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
       <dt className="text-xs text-slate-400 mb-0.5">{label}</dt>
@@ -31,7 +32,7 @@ export default function SessionInfoPanel({ session, calculatedDurationMs }: Sess
       <dl className="space-y-3">
         <InfoRow label="Session ID" value={session.id.slice(0, 8) + '…'} />
         <InfoRow label="User" value={session.external_id ?? session.anonymous_id.slice(0, 12) + '…'} />
-        <InfoRow label="Started" value={formatDateTime(session.started_at)} />
+        <InfoRow label="Started" value={<LocalDate date={session.started_at} />} />
         <InfoRow label="Duration" value={formatMs(duration)} />
         <InfoRow label="Events" value={session.event_count} />
         <div className="border-t border-slate-200 pt-3 mt-3">

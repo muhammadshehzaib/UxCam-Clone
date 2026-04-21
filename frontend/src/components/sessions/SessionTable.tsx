@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { Session, TAG_OPTIONS } from '@/types';
-import { formatMs, formatDateTime, truncate, getDeviceIcon } from '@/lib/utils';
 import { Play } from 'lucide-react';
 import BookmarkButton from './BookmarkButton';
+import LocalDate from '@/components/ui/LocalDate';
+import { formatMs, truncate, getDeviceIcon } from '@/lib/utils';
 
 interface SessionTableProps {
   sessions:  Session[];
@@ -50,7 +51,7 @@ export default function SessionTable({ sessions, fromPath }: SessionTableProps) 
                   <div className="text-xs text-slate-400 font-mono">{truncate(s.anonymous_id, 16)}</div>
                 )}
               </td>
-              <td className="px-4 py-3 text-slate-600">{formatDateTime(s.started_at)}</td>
+              <td className="px-4 py-3 text-slate-600"><LocalDate date={s.started_at} /></td>
               <td className="px-4 py-3 text-slate-600">{formatMs(s.duration_ms)}</td>
               <td className="px-4 py-3 text-slate-600">
                 <span className="mr-1">{getDeviceIcon(s.device_type)}</span>
