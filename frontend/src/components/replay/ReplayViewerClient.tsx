@@ -54,14 +54,14 @@ export default function ReplayViewerClient({ session, events, initialSeekMs, dom
   return (
     <div className="space-y-4">
       {/* Main content: canvas + info panel */}
-      <div className="flex gap-6 items-start">
+      <div className="flex flex-wrap gap-6 items-start">
         {/* Unified Replay Display: DOM Video + Interaction Overlay */}
         <div className="flex-shrink-0 relative">
           {hasDOMRecording && (
             <DOMReplayViewer
               frames={domFrames}
               currentTimeMs={currentTimeMs}
-              width={320}
+              width={1000}
               initialAspectRatio={session.screen_width && session.screen_height ? session.screen_height / session.screen_width : 16 / 9}
             />
           )}
@@ -76,6 +76,7 @@ export default function ReplayViewerClient({ session, events, initialSeekMs, dom
               screenHeight={session.screen_height}
               // Hide background if DOM recording is present to see the video underneath
               showBackground={!hasDOMRecording}
+              width={1000}
             />
           </div>
         </div>

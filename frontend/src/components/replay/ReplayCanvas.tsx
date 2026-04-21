@@ -12,9 +12,10 @@ interface ReplayCanvasProps {
   screenWidth:      number | null;
   screenHeight:     number | null;
   showBackground?:  boolean;
+  width?:           number;
 }
 
-const CANVAS_WIDTH = 320;
+const DEFAULT_WIDTH = 640;
 // Network failure badge shows for 3 seconds after the failure timestamp
 const NETWORK_BADGE_WINDOW_MS = 3000;
 
@@ -26,9 +27,10 @@ export default function ReplayCanvas({
   screenWidth,
   screenHeight,
   showBackground = true,
+  width = DEFAULT_WIDTH,
 }: ReplayCanvasProps) {
   const aspectRatio  = screenWidth && screenHeight ? screenHeight / screenWidth : 16 / 9;
-  const canvasHeight = Math.round(CANVAS_WIDTH * aspectRatio);
+  const canvasHeight = Math.round(width * aspectRatio);
 
   const activeEvent = useMemo(
     () => (activeEventIndex >= 0 ? events[activeEventIndex] : null),
@@ -67,7 +69,7 @@ export default function ReplayCanvas({
     return null;
   }, [events, activeEventIndex, currentTimeMs]);
 
-  const tapX = activeEvent?.x != null ? activeEvent.x * CANVAS_WIDTH : null;
+  const tapX = activeEvent?.x != null ? activeEvent.x * width : null;
   const tapY = activeEvent?.y != null ? activeEvent.y * canvasHeight : null;
   const isPointerEvent = activeEvent?.type === 'click';
   const isScrollEvent  = activeEvent?.type === 'scroll';
@@ -79,7 +81,7 @@ export default function ReplayCanvas({
       className={`relative rounded-2xl overflow-hidden border-4 border-slate-700 shadow-xl ${
         showBackground ? 'bg-slate-800' : 'bg-transparent'
       }`}
-      style={{ width: CANVAS_WIDTH, height: canvasHeight }}
+      style={{ width: width, height: canvasHeight }}
       data-testid="replay-canvas"
     >
       {/* Device screen background */}
@@ -102,7 +104,7 @@ export default function ReplayCanvas({
             data-testid="click-trail-dot"
             className="absolute pointer-events-none rounded-full border-2 border-white"
             style={{
-              left:            click.x * CANVAS_WIDTH,
+              left:            click.x * width,
               top:             click.y * canvasHeight,
               transform:       'translate(-50%, -50%)',
               width:           10,
