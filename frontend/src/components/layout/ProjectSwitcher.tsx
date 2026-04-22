@@ -88,72 +88,73 @@ export default function ProjectSwitcher() {
   }
 
   return (
-    <div ref={containerRef} className="relative px-3 py-3 border-b border-slate-700">
+    <div ref={containerRef} className="relative">
       <button
         onClick={() => { setOpen((v) => !v); setCreating(false); setError(null); }}
-        className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 transition-colors"
-        data-testid="project-switcher-trigger"
+        className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm text-slate-200 hover:bg-white/5 transition-all duration-200"
+        data-testid="project-trigger"
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <FolderOpen size={14} className="text-slate-400 flex-shrink-0" />
-          <span className="truncate font-medium">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-5 h-5 rounded-md bg-white/5 flex items-center justify-center text-slate-400">
+            <FolderOpen size={12} />
+          </div>
+          <span className="truncate font-medium tracking-tight">
             {currentProject?.name ?? 'Loading…'}
           </span>
         </div>
-        <ChevronDown size={13} className={`text-slate-400 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown size={14} className={`text-slate-500 flex-shrink-0 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
         <div
-          className="absolute left-3 right-3 top-full mt-1 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden"
+          className="absolute left-0 right-0 top-full mt-2 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-[60] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300"
           data-testid="project-dropdown"
         >
           {/* Project list */}
-          <ul className="py-1 max-h-48 overflow-y-auto">
+          <div className="p-1.5 space-y-0.5 max-h-64 overflow-y-auto">
             {projects.map((p) => (
-              <li key={p.id}>
-                <button
-                  onClick={() => handleSwitch(p.id)}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-200 hover:bg-slate-700 transition-colors"
-                  data-testid={`project-option-${p.id}`}
-                >
-                  <Check
-                    size={13}
-                    className={p.id === currentId ? 'text-brand-400' : 'invisible'}
-                  />
-                  <span className="truncate">{p.name}</span>
-                </button>
-              </li>
+              <button
+                key={p.id}
+                onClick={() => handleSwitch(p.id)}
+                className={`flex items-center gap-2.5 w-full px-3 py-2 text-xs rounded-xl transition-all duration-200 group ${
+                  p.id === currentId 
+                    ? 'bg-brand-500/10 text-brand-400' 
+                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-100'
+                }`}
+                data-testid={`project-option-${p.id}`}
+              >
+                <div className={`w-1.5 h-1.5 rounded-full transition-all ${p.id === currentId ? 'bg-brand-500 scale-100' : 'bg-slate-700 scale-50 group-hover:scale-75'}`} />
+                <span className="truncate font-medium">{p.name}</span>
+                {p.id === currentId && <Check size={12} className="ml-auto text-brand-500" />}
+              </button>
             ))}
-          </ul>
+          </div>
 
-          {/* Divider + New project */}
-          <div className="border-t border-slate-700 py-1">
+          {/* New project handler */}
+          <div className="p-1.5 border-t border-white/5 bg-white/[0.02]">
             {creating ? (
-              <form onSubmit={handleCreate} className="px-3 py-2 space-y-2">
+              <form onSubmit={handleCreate} className="p-2 space-y-2">
                 <input
                   autoFocus
                   type="text"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="Project name"
-                  className="w-full px-2 py-1.5 text-xs bg-slate-900 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                  data-testid="new-project-input"
+                  className="w-full px-3 py-2 text-xs bg-slate-950 border border-white/10 rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-brand-500/50 transition-all"
                 />
-                {error && <p className="text-xs text-red-400" data-testid="new-project-error">{error}</p>}
+                {error && <p className="text-[10px] text-red-400 font-medium px-1 px-1">{error}</p>}
                 <div className="flex gap-2">
                   <button
                     type="submit"
                     disabled={saving}
-                    className="flex-1 py-1 text-xs bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:opacity-60 transition-colors"
-                    data-testid="create-project-submit"
+                    className="flex-1 py-1.5 text-xs brand-gradient text-white font-bold rounded-lg shadow-bloom hover:opacity-90 disabled:opacity-50 transition-all"
                   >
                     {saving ? '…' : 'Create'}
                   </button>
                   <button
                     type="button"
                     onClick={() => { setCreating(false); setError(null); setNewName(''); }}
-                    className="px-2 py-1 text-xs text-slate-400 hover:text-slate-200 transition-colors"
+                    className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors"
                   >
                     Cancel
                   </button>
@@ -162,10 +163,12 @@ export default function ProjectSwitcher() {
             ) : (
               <button
                 onClick={() => setCreating(true)}
-                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-700 transition-colors"
+                className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:bg-white/5 hover:text-slate-100 transition-all group"
                 data-testid="new-project-button"
               >
-                <Plus size={13} />
+                <div className="w-5 h-5 rounded-md border border-dashed border-slate-700 flex items-center justify-center text-slate-500 group-hover:border-slate-500 group-hover:text-slate-300">
+                  <Plus size={12} />
+                </div>
                 New Project
               </button>
             )}

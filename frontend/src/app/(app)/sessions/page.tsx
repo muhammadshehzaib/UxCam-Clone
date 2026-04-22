@@ -66,30 +66,38 @@ export default async function SessionsPage({ searchParams }: Props) {
   const exportPath = `/sessions/export.csv?${exportQs}`;
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Sessions</h1>
-          <p className="text-slate-500 text-sm mt-1">
-            {total > 0 ? `${total.toLocaleString()} sessions recorded` : 'No sessions yet'}
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Sessions</h1>
+          <p className="text-slate-500 text-sm font-medium mt-1">
+            {total > 0 ? (
+              <>
+                Monitoring <span className="text-brand-600 font-bold">{total.toLocaleString()}</span> active user journeys
+              </>
+            ) : 'No session data detected yet'}
           </p>
         </div>
-        <ExportButton path={exportPath} filename="sessions.csv" />
+        <div className="flex items-center gap-3">
+          <ExportButton path={exportPath} filename="sessions.csv" />
+        </div>
       </div>
 
-      <Suspense fallback={<div className="h-16 bg-white border border-slate-200 rounded-xl animate-pulse mb-6" />}>
-        <SessionFilters />
-      </Suspense>
+      <div className="space-y-6">
+        <Suspense fallback={<div className="h-20 bg-white/50 backdrop-blur rounded-2xl border border-slate-100 animate-pulse" />}>
+          <SessionFilters />
+        </Suspense>
 
-      <SessionTable sessions={sessions} />
+        <SessionTable sessions={sessions} fromPath="/sessions" />
 
-      {totalPages > 1 && (
-        <div className="mt-6">
-          <Suspense fallback={null}>
-            <Pagination currentPage={page} totalPages={totalPages} />
-          </Suspense>
-        </div>
-      )}
+        {totalPages > 1 && (
+          <div className="flex justify-center pt-4">
+            <Suspense fallback={null}>
+              <Pagination currentPage={page} totalPages={totalPages} />
+            </Suspense>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

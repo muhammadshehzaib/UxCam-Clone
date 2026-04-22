@@ -32,49 +32,63 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 w-56 bg-slate-900 text-slate-100 flex flex-col z-10">
-      {/* Logo */}
-      <div className="px-5 py-4 border-b border-slate-700">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-brand-500 flex items-center justify-center text-white text-sm font-bold">
+    <aside className="fixed inset-y-0 left-0 w-[var(--sidebar-width)] bg-surface-950 text-slate-100 flex flex-col z-50 border-r border-slate-800/50 shadow-2xl">
+      {/* Logo & Header */}
+      <div className="px-6 py-6 border-b border-white/5">
+        <Link href="/sessions" className="flex items-center gap-3 group">
+          <div className="w-9 h-9 rounded-xl brand-gradient flex items-center justify-center text-white text-lg font-bold shadow-bloom transform transition-transform group-hover:scale-110 duration-300">
             U
           </div>
-          <span className="font-semibold text-white">UXClone</span>
+          <div className="flex flex-col">
+            <span className="font-bold text-white tracking-tight text-base leading-none mb-1">UXClone</span>
+            <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Intelligence</span>
+          </div>
+        </Link>
+      </div>
+
+      {/* Project selector area */}
+      <div className="px-4 py-4">
+        <div className="bg-slate-900/50 rounded-xl border border-white/5 p-1">
+          <ProjectSwitcher />
         </div>
       </div>
 
-      {/* Project switcher */}
-      <ProjectSwitcher />
-
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto scrollbar-hide">
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href);
           return (
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+              className={`group relative flex items-center gap-3 px-4 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 ${
                 active
-                  ? 'bg-brand-600 text-white'
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
+                  ? 'bg-brand-600/10 text-brand-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
+                  : 'text-slate-400 hover:text-slate-100 hover:bg-white/5'
               }`}
             >
-              <Icon size={16} />
+              <div className={`transition-colors duration-200 ${active ? 'text-brand-400' : 'text-slate-500 group-hover:text-slate-300'}`}>
+                <Icon size={18} strokeWidth={active ? 2.5 : 2} />
+              </div>
               {label}
+              {active && (
+                <div className="absolute left-0 w-1 h-5 bg-brand-500 rounded-r-full shadow-bloom" />
+              )}
             </Link>
           );
         })}
       </nav>
 
       {/* Footer — logout */}
-      <div className="px-3 py-4 border-t border-slate-700">
+      <div className="px-4 py-6 border-t border-white/5 bg-slate-900/20 backdrop-blur-sm">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-slate-100 transition-colors"
+          className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-[13px] font-medium text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 group"
           data-testid="logout-button"
         >
-          <LogOut size={16} />
+          <div className="text-slate-500 group-hover:text-red-400">
+            <LogOut size={18} />
+          </div>
           Sign out
         </button>
       </div>

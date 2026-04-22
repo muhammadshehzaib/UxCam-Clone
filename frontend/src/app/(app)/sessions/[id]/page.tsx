@@ -98,33 +98,38 @@ export default async function SessionReplayPage({ params, searchParams }: Props)
   }
 
   return (
-    <div>
+    <div className="space-y-6 animate-fade-in">
       <Link
         href={backHref}
-        className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 mb-6 transition-colors"
+        className="inline-flex items-center gap-1.5 text-[13px] font-bold text-slate-400 hover:text-brand-600 transition-all group"
       >
-        <ChevronLeft size={16} />
+        <ChevronLeft size={16} className="transform group-hover:-translate-x-1 transition-transform" />
         {backText}
       </Link>
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Session Replay</h1>
-          <p className="text-slate-500 text-sm mt-1 font-mono">{id}</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Session Replay</h1>
+          <p className="text-[11px] text-slate-400 font-mono mt-1 bg-slate-100/50 px-2 py-0.5 rounded-md inline-block">{id}</p>
         </div>
         {domFrames.length > 0 && (
-          <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 font-medium">
-            ● DOM Recording Available
-          </span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-100 shadow-sm transition-all hover:shadow-md pulse-subtle">
+            <div className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
+            <span className="text-[10px] text-brand-700 font-black uppercase tracking-widest leading-none">
+              DOM Recording Active
+            </span>
+          </div>
         )}
       </div>
 
-      <ReplayViewerClient
-        session={session}
-        events={events ?? []}
-        initialSeekMs={initialSeekMs}
-        domFrames={domFrames as Array<{ data: string; elapsed_ms: number; type: string }>}
-      />
+      <div className="animate-slide-up">
+        <ReplayViewerClient
+          session={session}
+          events={events ?? []}
+          initialSeekMs={initialSeekMs}
+          domFrames={domFrames as Array<{ data: string; elapsed_ms: number; type: string }>}
+        />
+      </div>
     </div>
   );
 }
