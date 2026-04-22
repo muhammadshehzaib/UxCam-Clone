@@ -73,16 +73,29 @@ export async function startSession(
   await redis.expire(`session:active:${sessionId}`, 1800);
 }
 
+// PostgreSQL max params is 65535; with 10 params per event that's 6553 events max.
+const MAX_EVENTS_PER_BATCH = 500;
+
 export async function ingestBatch(
   projectId: string,
   sessionId: string,
   events: RawEvent[]
 ): Promise<number> {
+  // Verify session belongs to this project before inserting any events
+  const sessionCheck = await db.query(
+    'SELECT id FROM sessions WHERE id = $1 AND project_id = $2',
+    [sessionId, projectId]
+  );
+  if (sessionCheck.rows.length === 0) return 0;
+
+  // Cap batch size to stay well under Postgres's 65535-parameter limit
+  const capped = events.slice(0, MAX_EVENTS_PER_BATCH);
+
   const values: unknown[] = [];
   const placeholders: string[] = [];
   let i = 1;
 
-  for (const ev of events) {
+  for (const ev of capped) {
     placeholders.push(
       `($${i},$${i+1},$${i+2},$${i+3},$${i+4},$${i+5},$${i+6},$${i+7},$${i+8},$${i+9})`
     );
@@ -108,13 +121,13 @@ export async function ingestBatch(
   );
 
   await db.query(
-    'UPDATE sessions SET event_count = event_count + $1 WHERE id = $2',
-    [events.length, sessionId]
+    'UPDATE sessions SET event_count = event_count + $1 WHERE id = $2 AND project_id = $3',
+    [capped.length, sessionId, projectId]
   );
 
   await redis.del(`analytics:summary:${projectId}`);
 
-  return events.length;
+  return capped.length;
 }
 
 export async function endSession(
@@ -128,9 +141,9 @@ export async function endSession(
     `UPDATE sessions
      SET ended_at = $1,
          duration_ms = EXTRACT(EPOCH FROM ($1 - started_at)) * 1000
-     WHERE id = $2
+     WHERE id = $2 AND project_id = $3
      RETURNING duration_ms`,
-    [endTime, sessionId]
+    [endTime, sessionId, projectId]
   );
 
   await db.query(

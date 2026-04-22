@@ -29,11 +29,11 @@ export async function ingestDOM(req: Request, res: Response): Promise<void> {
   const projectId = projectResult.rows[0].id as string;
 
   try {
-    // Normalize frames — data may arrive as object or string
+    // Normalize frames — data payload may arrive pre-serialized or as an object
     const normalized = frames.map((f: Record<string, unknown>) => ({
       type:      String(f.type ?? 'mutation'),
       elapsedMs: Number(f.elapsedMs ?? 0),
-      data:      typeof f === 'string' ? f : JSON.stringify(f),
+      data:      typeof f.data === 'string' ? f.data : JSON.stringify(f.data ?? f),
     }));
 
     await domSnapshotService.storeDOMFrames(sessionId, projectId, normalized);

@@ -2,10 +2,16 @@ import { db } from '../db/client';
 import { redis } from '../db/redis';
 
 export async function getSummary(projectId: string, days: number) {
-  const cacheKey = `analytics:summary:${projectId}:${days}`;
+  // Key intentionally omits :days so ingestService.redis.del(`analytics:summary:${projectId}`)
+  // can bust all cached summaries for this project regardless of the days window.
+  const cacheKey = `analytics:summary:${projectId}`;
 
   const cached = await redis.get(cacheKey);
-  if (cached) return JSON.parse(cached);
+  if (cached) {
+    const parsed = JSON.parse(cached);
+    if (parsed.__days === days) return parsed;
+    // days window changed — fall through to recompute
+  }
 
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
@@ -49,7 +55,7 @@ export async function getSummary(projectId: string, days: number) {
     topScreens: topScreensResult.rows.map((r) => ({ name: r.name, count: parseInt(r.count, 10) })),
   };
 
-  await redis.set(cacheKey, JSON.stringify(summary), 'EX', 60);
+  await redis.set(cacheKey, JSON.stringify({ ...summary, __days: days }), 'EX', 60);
   return summary;
 }
 
@@ -105,7 +111,7 @@ export async function getFeedbackSubmissions(projectId: string, days: number) {
             e.timestamp AS submitted_at,
             e.metadata->>'message' AS message,
             (e.metadata->>'rating')::int AS rating,
-            u.external_id AS user_email
+            COALESCE(u.traits->>'email', u.external_id) AS user_email
      FROM events e
      JOIN sessions s ON s.id = e.session_id
      LEFT JOIN app_users u ON u.id = s.user_id

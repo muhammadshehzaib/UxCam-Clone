@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { randomBytes } from 'crypto';
 import { db } from '../db/client';
 import { config } from '../config';
 
@@ -93,7 +94,13 @@ export async function login(email: string, password: string): Promise<AuthResult
   if (!email || !password) throw new Error('MISSING_FIELDS');
 
   const result = await db.query(
-    `SELECT u.id, u.email, u.name, u.password_hash, u.project_id
+    `SELECT u.id, u.email, u.name, u.password_hash,
+            -- Prefer the user_projects join table (authoritative for multi-project access)
+            -- Fall back to the legacy dashboard_users.project_id column
+            COALESCE(
+              (SELECT up.project_id FROM user_projects up WHERE up.user_id = u.id ORDER BY up.project_id LIMIT 1),
+              u.project_id
+            ) AS project_id
      FROM dashboard_users u
      WHERE u.email = $1`,
     [email.toLowerCase()]
@@ -105,7 +112,7 @@ export async function login(email: string, password: string): Promise<AuthResult
   const valid = await bcrypt.compare(password, user.password_hash);
   if (!valid) throw new Error('INVALID_CREDENTIALS');
 
-  if (!user.project_id) throw new Error('INVALID_CREDENTIALS');
+  if (!user.project_id) throw new Error('NO_PROJECT');
 
   const token = signToken({ sub: user.id, projectId: user.project_id, email: user.email });
   return {
@@ -138,7 +145,5 @@ export async function getMe(userId: string): Promise<{
 }
 
 function generateApiKey(): string {
-  return Array.from({ length: 32 }, () =>
-    Math.floor(Math.random() * 36).toString(36)
-  ).join('');
+  return randomBytes(24).toString('hex'); // 48 hex chars, 192 bits of entropy
 }
