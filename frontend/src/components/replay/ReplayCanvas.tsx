@@ -66,8 +66,8 @@ export default function ReplayCanvas({
     return null;
   }, [events, activeEventIndex, currentTimeMs]);
 
-  const tapX = activeEvent?.x != null ? activeEvent.x * 1000 : null;
-  const tapY = activeEvent?.y != null ? activeEvent.y * 600 : null;
+  const tapX = activeEvent?.x != null ? `${activeEvent.x * 100}%` : null;
+  const tapY = activeEvent?.y != null ? `${activeEvent.y * 100}%` : null;
   const isPointerEvent = activeEvent?.type === 'click';
   const isScrollEvent  = activeEvent?.type === 'scroll';
   const isInputEvent   = !!activeInputEvent;
@@ -98,8 +98,8 @@ export default function ReplayCanvas({
             data-testid="click-trail-dot"
             className="absolute pointer-events-none rounded-full border-2 border-white"
             style={{
-              left:            click.x * 1000,
-              top:             click.y * 600,
+              left:            `${click.x * 100}%`,
+              top:             `${click.y * 100}%`,
               transform:       'translate(-50%, -50%)',
               width:           10,
               height:          10,

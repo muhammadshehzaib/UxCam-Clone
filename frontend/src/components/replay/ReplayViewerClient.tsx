@@ -59,7 +59,12 @@ export default function ReplayViewerClient({ session, events, initialSeekMs, dom
         {/* Unified Replay Display: DOM Video + Interaction Overlay */}
         <div 
           className="flex-shrink-0 relative rounded-2xl border-4 border-slate-800 overflow-hidden shadow-2xl bg-white"
-          style={{ width: 1000, height: 600 }}
+          style={{ 
+            width: 1000, 
+            height: session.screen_width && session.screen_height 
+              ? (1000 * session.screen_height) / session.screen_width 
+              : 600 
+          }}
         >
           {hasDOMRecording && (
             <DOMReplayViewer
