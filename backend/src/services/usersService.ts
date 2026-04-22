@@ -35,7 +35,7 @@ export async function listUsers(
     conditions.push(
       `EXISTS (
          SELECT 1 FROM sessions s
-         WHERE s.user_id = u.id
+         WHERE s.anonymous_id = u.anonymous_id
            AND s.project_id = u.project_id
            AND ${sessionConditions.join(' AND ')}
        )`
@@ -67,7 +67,9 @@ export async function listUsers(
   const [rowsResult, countResult] = await Promise.all([
     db.query(
       `SELECT u.id, u.external_id, u.anonymous_id, u.traits,
-              u.first_seen_at, u.last_seen_at, u.session_count
+              u.first_seen_at, u.last_seen_at,
+              (SELECT COUNT(*) FROM sessions s
+               WHERE s.anonymous_id = u.anonymous_id AND s.project_id = u.project_id) AS session_count
        FROM app_users u
        WHERE ${where}
        ORDER BY u.last_seen_at DESC
@@ -115,7 +117,7 @@ export async function exportUsersAsCsv(
 
   if (sessionConditions.length > 0) {
     conditions.push(
-      `EXISTS (SELECT 1 FROM sessions s WHERE s.user_id = u.id AND s.project_id = u.project_id AND ${sessionConditions.join(' AND ')})`
+      `EXISTS (SELECT 1 FROM sessions s WHERE s.anonymous_id = u.anonymous_id AND s.project_id = u.project_id AND ${sessionConditions.join(' AND ')})`
     );
   }
 
@@ -136,7 +138,8 @@ export async function exportUsersAsCsv(
        u.traits->>'email' AS email,
        u.first_seen_at,
        u.last_seen_at,
-       u.session_count
+       (SELECT COUNT(*) FROM sessions s
+        WHERE s.anonymous_id = u.anonymous_id AND s.project_id = u.project_id) AS session_count
      FROM app_users u
      WHERE ${conditions.join(' AND ')}
      ORDER BY u.last_seen_at DESC
@@ -152,9 +155,11 @@ export async function exportUsersAsCsv(
 
 export async function getUserById(projectId: string, userId: string) {
   const result = await db.query(
-    `SELECT id, external_id, anonymous_id, traits, first_seen_at, last_seen_at, session_count
-     FROM app_users
-     WHERE id = $1 AND project_id = $2`,
+    `SELECT u.id, u.external_id, u.anonymous_id, u.traits, u.first_seen_at, u.last_seen_at,
+            (SELECT COUNT(*) FROM sessions s
+             WHERE s.anonymous_id = u.anonymous_id AND s.project_id = u.project_id) AS session_count
+     FROM app_users u
+     WHERE u.id = $1 AND u.project_id = $2`,
     [userId, projectId]
   );
 
@@ -172,15 +177,18 @@ export async function listUserSessions(
 
   const [rowsResult, countResult] = await Promise.all([
     db.query(
-      `SELECT id, started_at, ended_at, duration_ms, device_type, os, event_count
-       FROM sessions
-       WHERE user_id = $1 AND project_id = $2
-       ORDER BY started_at DESC
+      `SELECT s.id, s.started_at, s.ended_at, s.duration_ms, s.device_type, s.os, s.event_count
+       FROM sessions s
+       JOIN app_users u ON u.anonymous_id = s.anonymous_id AND u.project_id = s.project_id
+       WHERE u.id = $1 AND s.project_id = $2
+       ORDER BY s.started_at DESC
        LIMIT $3 OFFSET $4`,
       [userId, projectId, limit, offset]
     ),
     db.query(
-      'SELECT COUNT(*) FROM sessions WHERE user_id = $1 AND project_id = $2',
+      `SELECT COUNT(*) FROM sessions s
+       JOIN app_users u ON u.anonymous_id = s.anonymous_id AND u.project_id = s.project_id
+       WHERE u.id = $1 AND s.project_id = $2`,
       [userId, projectId]
     ),
   ]);

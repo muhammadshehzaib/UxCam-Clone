@@ -31,25 +31,28 @@ export async function startSession(
   startedAt: number,
   device: DeviceInfo
 ): Promise<void> {
-  await db.query(
+  const userResult = await db.query(
     `INSERT INTO app_users (project_id, anonymous_id, last_seen_at)
      VALUES ($1, $2, NOW())
      ON CONFLICT (project_id, anonymous_id)
-     DO UPDATE SET last_seen_at = NOW()`,
+     DO UPDATE SET last_seen_at = NOW()
+     RETURNING id`,
     [projectId, anonymousId]
   );
+  const appUserId: string = userResult.rows[0].id;
 
   await db.query(
     `INSERT INTO sessions (
-       id, project_id, anonymous_id, started_at,
+       id, project_id, anonymous_id, user_id, started_at,
        device_type, os, os_version, browser, browser_version,
        app_version, screen_width, screen_height
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
      ON CONFLICT (id) DO NOTHING`,
     [
       sessionId,
       projectId,
       anonymousId,
+      appUserId,
       new Date(startedAt ?? Date.now()),
       device.type ?? null,
       device.os ?? null,

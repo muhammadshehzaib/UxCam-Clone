@@ -34,8 +34,12 @@ function setItem(key: string, value: string): void {
 
 function detectDevice(): DeviceInfo {
   const ua = navigator.userAgent;
-  const screenWidth = window.screen.width;
-  const screenHeight = window.screen.height;
+  // Use viewport dimensions (innerWidth/Height), not screen resolution, because
+  // click coordinates are normalized against the viewport — screen.width/height is
+  // the physical monitor size and produces a different aspect ratio, causing
+  // click markers to render at wrong positions in replay.
+  const screenWidth = window.innerWidth;
+  const screenHeight = window.innerHeight;
 
   // Device type detection
   const isMobile = /Mobi|Android/i.test(ua);
