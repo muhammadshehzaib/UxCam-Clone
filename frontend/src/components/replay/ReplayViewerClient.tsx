@@ -52,106 +52,125 @@ export default function ReplayViewerClient({ session, events, initialSeekMs, dom
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8 pb-12">
       {/* Main content: canvas + info panel */}
-      <div className="flex flex-wrap gap-6 items-start">
+      <div className="flex flex-col lg:flex-row gap-8 items-start animate-slide-up">
         {/* Unified Replay Display: DOM Video + Interaction Overlay */}
-        {/* Unified Replay Display: DOM Video + Interaction Overlay */}
-        <div 
-          className="flex-shrink-0 relative rounded-2xl border-4 border-slate-800 overflow-hidden shadow-2xl bg-white"
-          style={{ 
-            width: 1000, 
-            height: session.screen_width && session.screen_height 
-              ? (1000 * session.screen_height) / session.screen_width 
-              : 600 
-          }}
-        >
-          {hasDOMRecording && (
-            <DOMReplayViewer
-              frames={domFrames}
-              currentTimeMs={currentTimeMs}
-              width={1000}
-              initialAspectRatio={session.screen_width && session.screen_height ? session.screen_height / session.screen_width : 16 / 9}
-            />
-          )}
-          
-          <div className={hasDOMRecording ? "absolute inset-0 z-10 pointer-events-none" : ""}>
-            <ReplayCanvas
-              events={events}
-              activeEventIndex={activeEventIndex}
-              currentTimeMs={currentTimeMs}
-              networkFailures={networkFailures}
-              screenWidth={session.screen_width}
-              screenHeight={session.screen_height}
-              // Hide background if DOM recording is present to see the video underneath
-              showBackground={!hasDOMRecording}
-              width={1000}
-            />
+        <div className="flex-shrink-0">
+          <div 
+            className="relative rounded-3xl border-8 border-surface-900 shadow-bloom-lg overflow-hidden bg-black ring-1 ring-white/10"
+            style={{ 
+              width: 1000, 
+              height: session.screen_width && session.screen_height 
+                ? (1000 * session.screen_height) / session.screen_width 
+                : 600 
+            }}
+          >
+            {hasDOMRecording && (
+              <DOMReplayViewer
+                frames={domFrames}
+                currentTimeMs={currentTimeMs}
+                width={1000}
+                initialAspectRatio={session.screen_width && session.screen_height ? session.screen_height / session.screen_width : 16 / 9}
+              />
+            )}
+            
+            <div className={hasDOMRecording ? "absolute inset-0 z-10 pointer-events-none" : ""}>
+              <ReplayCanvas
+                events={events}
+                activeEventIndex={activeEventIndex}
+                currentTimeMs={currentTimeMs}
+                networkFailures={networkFailures}
+                screenWidth={session.screen_width}
+                screenHeight={session.screen_height}
+                showBackground={!hasDOMRecording}
+                width={1000}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Info panel */}
-        <div className="flex-1 min-w-0">
-          <SessionInfoPanel session={session} calculatedDurationMs={durationMs} />
+        {/* Info & Side Panel */}
+        <div className="flex-1 w-full space-y-6">
+          <div className="glass-card p-1 rounded-2xl">
+            <SessionInfoPanel session={session} calculatedDurationMs={durationMs} />
+          </div>
 
-          {/* Event log — shows last few events */}
-          <div className="mt-4 bg-white rounded-xl border border-slate-200 p-4">
-            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
-              Recent Events
+          {/* Event log — premium card style */}
+          <div className="glass-card p-6 rounded-2xl">
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
+              <div className="w-1 h-1 bg-brand-500 rounded-full" />
+              Real-time Event Stream
             </h3>
-            <div className="space-y-1 max-h-48 overflow-y-auto">
+            <div className="space-y-2 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
               {events
-                .slice(Math.max(0, activeEventIndex - 4), activeEventIndex + 1)
+                .slice(Math.max(0, activeEventIndex - 8), activeEventIndex + 1)
                 .reverse()
                 .map((ev, i) => (
                   <div
                     key={ev.id}
-                    className={`flex items-center gap-2 text-xs px-2 py-1 rounded transition-colors ${
-                      i === 0 ? 'bg-brand-50 text-brand-700' : 'text-slate-500'
+                    className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 border ${
+                      i === 0 
+                        ? 'bg-brand-500/10 border-brand-500/20 shadow-sm scale-[1.02]' 
+                        : 'bg-white/40 border-transparent text-slate-500'
                     }`}
                   >
-                    <span
-                      className="w-2 h-2 rounded-full flex-shrink-0"
+                    <div
+                      className={`w-2.5 h-2.5 rounded-full ring-4 shadow-sm flex-shrink-0 transition-all ${i === 0 ? 'animate-pulse ring-brand-500/20' : 'ring-slate-100'}`}
                       style={{ backgroundColor: EVENT_COLORS[ev.type] ?? (i === 0 ? '#6366f1' : '#cbd5e1') }}
                     />
-                    <span className="font-mono">{(ev.elapsed_ms / 1000).toFixed(1)}s</span>
-                    <span className="font-medium capitalize">{ev.type}</span>
-                    {ev.type === 'network' && ev.value && (
-                      <span className="text-red-500 font-mono text-xs">→ {ev.value}</span>
-                    )}
-                    {ev.screen_name && (
-                      <span className="text-slate-400 truncate">{ev.screen_name}</span>
-                    )}
+                    <div className="flex flex-col min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-bold capitalize text-[13px] ${i === 0 ? 'text-brand-900' : 'text-slate-700'}`}>{ev.type}</span>
+                        <span className="text-[10px] font-mono opacity-50">{(ev.elapsed_ms / 1000).toFixed(2)}s</span>
+                      </div>
+                      {ev.type === 'network' && ev.value && (
+                        <span className="text-red-500 font-mono text-[11px] truncate">→ {ev.value}</span>
+                      )}
+                      {ev.screen_name && (
+                        <span className="text-slate-400 text-[11px] truncate mt-0.5">{ev.screen_name}</span>
+                      )}
+                    </div>
                   </div>
                 ))}
+              {activeEventIndex < 0 && (
+                <div className="text-center py-12">
+                   <div className="w-10 h-10 brand-gradient rounded-full mx-auto mb-3 opacity-20" />
+                   <p className="text-xs text-slate-400 font-medium tracking-tight">System initialized. Waiting for playback...</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Timeline + controls */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-3">
-        <TimelineBar
-          events={events}
-          durationMs={durationMs}
-          currentTimeMs={currentTimeMs}
-          onSeek={seek}
-          rageTimestamps={rageTimestamps}
-          freezeTimestamps={freezeTimestamps}
-          networkFailures={networkFailures}
-          feedbackEvents={feedbackEvents}
-        />
-        <PlaybackControls
-          isPlaying={isPlaying}
-          currentTimeMs={currentTimeMs}
-          durationMs={durationMs}
-          speed={speed}
-          onPlay={play}
-          onPause={pause}
-          onSeek={seek}
-          onSetSpeed={setSpeed}
-        />
+      {/* Timeline Controls Area */}
+      <div className="glass-card p-8 rounded-[2rem] shadow-bloom">
+        <div className="space-y-6">
+          <TimelineBar
+            events={events}
+            durationMs={durationMs}
+            currentTimeMs={currentTimeMs}
+            onSeek={seek}
+            rageTimestamps={rageTimestamps}
+            freezeTimestamps={freezeTimestamps}
+            networkFailures={networkFailures}
+            feedbackEvents={feedbackEvents}
+          />
+          <PlaybackControls
+            isPlaying={isPlaying}
+            currentTimeMs={currentTimeMs}
+            durationMs={durationMs}
+            speed={speed}
+            onPlay={play}
+            onPause={pause}
+            onSeek={seek}
+            onSetSpeed={setSpeed}
+          />
+        </div>
       </div>
     </div>
+  );
+}
   );
 }

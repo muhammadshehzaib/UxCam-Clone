@@ -42,9 +42,9 @@ services:
       - CHOKIDAR_USEPOLLING=true
     ports:
       - '3001:3001'
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
+    # volumes:
+    #   - ./backend:/app
+    #   - /app/node_modules
     depends_on:
       postgres:
         condition: service_healthy
@@ -63,9 +63,9 @@ services:
       - WATCHPACK_POLLING=true
     ports:
       - '3009:3000'
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    # volumes:
+    #   - ./frontend:/app
+    #   - /app/node_modules
     depends_on:
       - api
 
