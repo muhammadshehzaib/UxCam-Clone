@@ -15,10 +15,13 @@ import { initSession, getSessionId, getAnonymousId, getElapsedMs, destroySession
 import { RNTransport } from './transport';
 import { attachRNCrashRecorder } from './crashRecorder';
 import { attachRNNetworkRecorder } from './networkRecorder';
+import { createTouchHandlers } from './touchTracker';
+import { attachRNScreenRecorder } from './screenRecorder';
 
 let transport:         RNTransport | null = null;
 let detachCrash:       (() => void) | null = null;
 let detachNetwork:     (() => void) | null = null;
+let detachScreen:      (() => void) | null = null;
 let currentScreen      = 'App';
 let initialized        = false;
 
@@ -84,6 +87,27 @@ export const UXCloneRN = {
 
     // Attach network recorder
     detachNetwork = attachRNNetworkRecorder(push, getElapsedMs, () => currentScreen, config.endpoint);
+
+    // Attach screen recorder — periodic screenshots for visual replay.
+    // Opt-in (requires react-native-view-shot); off by default to avoid surprises.
+    if (config.screenRecording) {
+      detachScreen = attachRNScreenRecorder(
+        (frame) => {
+          fetch(`${config.endpoint}/api/v1/ingest/screen`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({
+              sessionId,
+              anonymousId,
+              apiKey: config.apiKey,
+              frames: [frame],
+            }),
+          }).catch(() => {});
+        },
+        getElapsedMs,
+        config.screenInterval
+      );
+    }
 
     // Flush when app goes to background
     try {
@@ -158,8 +182,21 @@ export const UXCloneRN = {
   },
 
   /**
-   * Record a touch event (x/y normalized 0–1).
-   * Call from a Pressable/TouchableOpacity wrapper or GestureHandler.
+   * Returns props to spread onto your app's root View to automatically record
+   * every tap (no manual calls needed). Does not interfere with your own touch
+   * handling — buttons and gestures keep working:
+   *
+   *   <View style={{ flex: 1 }} {...UXCloneRN.touchHandlers()}>
+   *     ...your app...
+   *   </View>
+   */
+  touchHandlers() {
+    return createTouchHandlers(push, getElapsedMs, () => currentScreen);
+  },
+
+  /**
+   * Record a single touch event manually (x/y normalized 0–1).
+   * Prefer `touchHandlers()` for automatic capture; use this for one-off cases.
    */
   recordTouch(x: number, y: number, componentName?: string): void {
     if (!initialized) return;
@@ -186,6 +223,7 @@ export const UXCloneRN = {
     transport?.flushSync();
     detachCrash?.();
     detachNetwork?.();
+    detachScreen?.();
 
     if (initialized) {
       // End session
@@ -202,6 +240,7 @@ export const UXCloneRN = {
     transport     = null;
     detachCrash   = null;
     detachNetwork = null;
+    detachScreen  = null;
     initialized   = false;
     destroySession();
   },

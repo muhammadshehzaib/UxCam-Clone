@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { requireApiKey, ingestRateLimiter } from '../middleware';
 import * as ingestController from '../controllers/ingestController';
 import { ingestDOM } from '../controllers/domSnapshotController';
+import { ingestScreen } from '../controllers/screenFrameController';
 
 const router = Router();
 router.use(requireApiKey);
@@ -15,5 +16,8 @@ router.post('/identify',      ingestController.identify);
 // DOM snapshot recording — no requireApiKey since it validates apiKey internally
 // (larger payload limit for snapshots)
 router.post('/dom',           ingestDOM);
+
+// Mobile screenshot recording — validates apiKey internally like /dom
+router.post('/screen',        ingestScreen);
 
 export default router;

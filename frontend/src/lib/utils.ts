@@ -48,6 +48,7 @@ export function getDeviceIcon(deviceType: string | null): string {
 
 export const EVENT_COLORS: Record<string, string> = {
   click: '#3B82F6',
+  touch: '#3B82F6',
   scroll: '#9CA3AF',
   navigate: '#8B5CF6',
   input: '#F59E0B',
