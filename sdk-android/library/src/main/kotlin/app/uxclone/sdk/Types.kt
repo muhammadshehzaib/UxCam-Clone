@@ -56,10 +56,12 @@ data class UXEvent(
 }
 
 data class UXConfig(
-    val apiKey:        String,
-    val endpoint:      String,
-    val flushInterval: Long   = 5_000L,   // ms
-    val maxBatchSize:  Int    = 50,
-    val sampleRate:    Double = 1.0,
-    val appVersion:    String = "1.0.0",
+    val apiKey:          String,
+    val endpoint:        String,
+    val flushInterval:   Long    = 5_000L,   // ms
+    val maxBatchSize:    Int     = 50,
+    val sampleRate:      Double  = 1.0,
+    val appVersion:      String  = "1.0.0",
+    val screenRecording: Boolean = false,    // capture periodic screenshots for replay
+    val screenInterval:  Long    = 1_000L,   // ms between screenshots
 )

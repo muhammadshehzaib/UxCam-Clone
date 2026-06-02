@@ -5,22 +5,32 @@ import UIKit
 public final class UXClone {
     public static let shared = UXClone()
 
-    private var config:        UXConfig?
-    private var sessionMgr:    SessionManager?
-    private var transport:     Transport?
-    private var crashRecorder: CrashRecorder?
-    private var currentScreen  = "App"
-    private var initialized    = false
+    private var config:         UXConfig?
+    private var sessionMgr:     SessionManager?
+    private var transport:      Transport?
+    private var crashRecorder:  CrashRecorder?
+    private var screenRecorder: ScreenRecorder?
+    private var currentScreen   = "App"
+    private var initialized     = false
 
     private init() {}
 
     // MARK: - Public API
 
     /// Initialize the SDK. Call once in `application(_:didFinishLaunchingWithOptions:)`.
-    public func initialize(apiKey: String, endpoint: String, appVersion: String = "1.0.0", sampleRate: Double = 1.0) {
+    /// Set `screenRecording: true` to capture periodic screenshots for visual replay.
+    public func initialize(
+        apiKey: String,
+        endpoint: String,
+        appVersion: String = "1.0.0",
+        sampleRate: Double = 1.0,
+        screenRecording: Bool = false,
+        screenInterval: TimeInterval = 1.0
+    ) {
         guard Double.random(in: 0...1) <= sampleRate else { return }
 
-        let cfg    = UXConfig(apiKey: apiKey, endpoint: endpoint, appVersion: appVersion, sampleRate: sampleRate)
+        let cfg    = UXConfig(apiKey: apiKey, endpoint: endpoint, appVersion: appVersion, sampleRate: sampleRate,
+                              screenRecording: screenRecording, screenInterval: screenInterval)
         let sm     = SessionManager()
         let t      = Transport(config: cfg, getSessionId: sm.getSessionId, getAnonId: sm.getAnonymousId)
 
@@ -36,12 +46,30 @@ public final class UXClone {
             getCurrentScreen: { [weak self] in self?.currentScreen ?? "App" }
         )
 
+        // Capture every touch app-wide
+        TouchRecorder.attach(
+            push:             { [weak self] e in self?.transport?.push(e) },
+            getElapsedMs:     sm.getElapsedMs,
+            getCurrentScreen: { [weak self] in self?.currentScreen ?? "App" }
+        )
+
         // Register network interceptor
         UXCloneURLProtocol.push             = { [weak self] e in self?.transport?.push(e) }
         UXCloneURLProtocol.getElapsedMs     = sm.getElapsedMs
         UXCloneURLProtocol.getCurrentScreen = { [weak self] in self?.currentScreen ?? "App" }
         UXCloneURLProtocol.sdkEndpoint      = endpoint
         URLProtocol.registerClass(UXCloneURLProtocol.self)
+
+        // Periodic screenshot capture for visual replay (opt-in)
+        if screenRecording {
+            let recorder = ScreenRecorder(
+                interval:     screenInterval,
+                getElapsedMs: sm.getElapsedMs,
+                sendFrame:    { [weak self] frame in self?.sendScreenFrame(frame) }
+            )
+            recorder.start()
+            screenRecorder = recorder
+        }
 
         // Flush on app background
         NotificationCenter.default.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: nil) { [weak self] _ in
@@ -85,12 +113,31 @@ public final class UXClone {
         transport?.stopAutoFlush()
         transport?.flush()
         crashRecorder?.detach()
+        screenRecorder?.stop()
+        TouchRecorder.detach()
         URLProtocol.unregisterClass(UXCloneURLProtocol.self)
         initialized = false
-        config = nil; sessionMgr = nil; transport = nil; crashRecorder = nil
+        config = nil; sessionMgr = nil; transport = nil; crashRecorder = nil; screenRecorder = nil
     }
 
     // MARK: - Private
+
+    /// Upload a single screenshot frame to the screen-ingest endpoint.
+    private func sendScreenFrame(_ frame: [String: Any]) {
+        guard let cfg = config, let sm = sessionMgr,
+              let url = URL(string: "\(cfg.endpoint)/api/v1/ingest/screen") else { return }
+        let payload: [String: Any] = [
+            "sessionId":   sm.getSessionId(),
+            "anonymousId": sm.getAnonymousId(),
+            "apiKey":      cfg.apiKey,
+            "frames":      [frame],
+        ]
+        guard let data = try? JSONSerialization.data(withJSONObject: payload) else { return }
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"; req.httpBody = data
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        URLSession.shared.dataTask(with: req).resume()
+    }
 
     private func sendSessionStart() {
         guard let cfg = config, let sm = sessionMgr,

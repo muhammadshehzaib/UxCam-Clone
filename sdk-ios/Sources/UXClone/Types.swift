@@ -61,26 +61,32 @@ public struct UXDeviceInfo: Codable {
 // MARK: - Config
 
 public struct UXConfig {
-    public let apiKey:        String
-    public let endpoint:      String
-    public var flushInterval: TimeInterval
-    public var maxBatchSize:  Int
-    public var sampleRate:    Double
-    public var appVersion:    String
+    public let apiKey:          String
+    public let endpoint:        String
+    public var flushInterval:   TimeInterval
+    public var maxBatchSize:    Int
+    public var sampleRate:      Double
+    public var appVersion:      String
+    public var screenRecording: Bool
+    public var screenInterval:  TimeInterval
 
     public init(
-        apiKey:        String,
-        endpoint:      String,
-        flushInterval: TimeInterval = 5.0,
-        maxBatchSize:  Int = 50,
-        sampleRate:    Double = 1.0,
-        appVersion:    String = "1.0.0"
+        apiKey:          String,
+        endpoint:        String,
+        flushInterval:   TimeInterval = 5.0,
+        maxBatchSize:    Int = 50,
+        sampleRate:      Double = 1.0,
+        appVersion:      String = "1.0.0",
+        screenRecording: Bool = false,
+        screenInterval:  TimeInterval = 1.0
     ) {
-        self.apiKey        = apiKey
-        self.endpoint      = endpoint
-        self.flushInterval = flushInterval
-        self.maxBatchSize  = maxBatchSize
-        self.sampleRate    = sampleRate
-        self.appVersion    = appVersion
+        self.apiKey          = apiKey
+        self.endpoint        = endpoint
+        self.flushInterval   = flushInterval
+        self.maxBatchSize    = maxBatchSize
+        self.sampleRate      = sampleRate
+        self.appVersion      = appVersion
+        self.screenRecording = screenRecording
+        self.screenInterval  = screenInterval
     }
 }
