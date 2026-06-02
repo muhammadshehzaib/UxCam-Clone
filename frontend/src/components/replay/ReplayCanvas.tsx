@@ -114,15 +114,15 @@ export default function ReplayCanvas({
       {isPointerEvent && tapX != null && tapY != null && (
         <div
           className="absolute pointer-events-none"
-          style={{ left: tapX, top: tapY, transform: 'translate(-50%, -50%)' }}
+          style={{ left: tapX, top: tapY }}
         >
           <div
             className="absolute rounded-full animate-ping"
             style={{ width: 36, height: 36, top: -18, left: -18, backgroundColor: eventColor, opacity: 0.3 }}
           />
           <div
-            className="rounded-full"
-            style={{ width: 16, height: 16, backgroundColor: eventColor, opacity: 0.85, transform: 'translate(-50%, -50%)', position: 'relative' }}
+            className="absolute rounded-full"
+            style={{ width: 16, height: 16, top: -8, left: -8, backgroundColor: eventColor, opacity: 0.85 }}
           />
         </div>
       )}

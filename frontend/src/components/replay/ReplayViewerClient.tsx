@@ -23,9 +23,34 @@ interface ReplayViewerClientProps {
   domFrames?:    DOMFrame[];   // populated when session has DOM recording
 }
 
+// Derive the recorded aspect ratio (height / width) from the first DOM snapshot.
+// Used as a fallback when the session row is missing screen dimensions (e.g. a
+// non-web client that didn't send device info), so the player box keeps the
+// recording's real proportions instead of defaulting to a distorted 1000×600.
+function aspectFromDOMFrames(frames: DOMFrame[]): number | null {
+  for (const f of frames) {
+    if (f.type !== 'snapshot') continue;
+    try {
+      const parsed = JSON.parse(f.data);
+      if (parsed.width && parsed.height) return parsed.height / parsed.width;
+    } catch {
+      /* skip malformed frame */
+    }
+  }
+  return null;
+}
+
 export default function ReplayViewerClient({ session, events, initialSeekMs, domFrames = [] }: ReplayViewerClientProps) {
   const hasDOMRecording = domFrames.length > 0;
   const durationMs = session.duration_ms ?? (events.length > 0 ? events[events.length - 1].elapsed_ms + 100 : 0);
+
+  // Aspect ratio (height / width) of the player box. Prefer the session's
+  // recorded screen dimensions; fall back to the DOM snapshot; finally 16:9.
+  const fallbackAspect = aspectFromDOMFrames(domFrames);
+  const aspectRatio =
+    session.screen_width && session.screen_height
+      ? session.screen_height / session.screen_width
+      : fallbackAspect ?? 0.6; // 0.6 == the previous 1000×600 default
 
   const { currentTimeMs, isPlaying, speed, activeEventIndex, play, pause, seek, setSpeed } =
     useReplayEngine(events, durationMs);
@@ -59,11 +84,9 @@ export default function ReplayViewerClient({ session, events, initialSeekMs, dom
         <div className="flex-shrink-0">
           <div 
             className="relative rounded-3xl border-8 border-surface-900 shadow-bloom-lg overflow-hidden bg-black ring-1 ring-white/10"
-            style={{ 
-              width: 1000, 
-              height: session.screen_width && session.screen_height 
-                ? (1000 * session.screen_height) / session.screen_width 
-                : 600 
+            style={{
+              width: 1000,
+              height: 1000 * aspectRatio,
             }}
           >
             {hasDOMRecording && (
@@ -71,7 +94,7 @@ export default function ReplayViewerClient({ session, events, initialSeekMs, dom
                 frames={domFrames}
                 currentTimeMs={currentTimeMs}
                 width={1000}
-                initialAspectRatio={session.screen_width && session.screen_height ? session.screen_height / session.screen_width : 16 / 9}
+                initialAspectRatio={aspectRatio}
               />
             )}
             
@@ -170,7 +193,5 @@ export default function ReplayViewerClient({ session, events, initialSeekMs, dom
         </div>
       </div>
     </div>
-  );
-}
   );
 }

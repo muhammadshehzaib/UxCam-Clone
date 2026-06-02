@@ -140,7 +140,9 @@ export class SessionManager {
         body: JSON.stringify(payload),
       });
     } catch {
-      // Non-fatal: session will still be created on first batch ingest
+      // If this fails the session row is never created, and the backend's
+      // ingestBatch drops events for unknown sessions — so events from this
+      // session will be lost. Network errors here are rare but not recoverable.
     }
   }
 
