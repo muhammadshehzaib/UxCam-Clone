@@ -34,11 +34,12 @@ export default function ReplayCanvas({
     [events, activeEventIndex]
   );
 
-  // Click trail — last 5 click events before (and including) activeEventIndex
+  // Tap/click trail — last 10 pointer events before (and including) activeEventIndex.
+  // 'click' = web SDK, 'touch' = mobile SDKs; both carry normalized x/y.
   const clickTrail = useMemo(() => {
     const clicks = events
       .slice(0, activeEventIndex + 1)
-      .filter((e) => e.type === 'click' && e.x !== null && e.y !== null)
+      .filter((e) => (e.type === 'click' || e.type === 'touch') && e.x !== null && e.y !== null)
       .slice(-10);
     return clicks.map((e, i, arr) => ({
       ...e,
@@ -68,7 +69,7 @@ export default function ReplayCanvas({
 
   const tapX = activeEvent?.x != null ? `${activeEvent.x * 100}%` : null;
   const tapY = activeEvent?.y != null ? `${activeEvent.y * 100}%` : null;
-  const isPointerEvent = activeEvent?.type === 'click';
+  const isPointerEvent = activeEvent?.type === 'click' || activeEvent?.type === 'touch';
   const isScrollEvent  = activeEvent?.type === 'scroll';
   const isInputEvent   = !!activeInputEvent;
   const eventColor     = activeEvent ? (EVENT_COLORS[activeEvent.type] ?? '#6366f1') : '#6366f1';
@@ -114,15 +115,15 @@ export default function ReplayCanvas({
       {isPointerEvent && tapX != null && tapY != null && (
         <div
           className="absolute pointer-events-none"
-          style={{ left: tapX, top: tapY, transform: 'translate(-50%, -50%)' }}
+          style={{ left: tapX, top: tapY }}
         >
           <div
             className="absolute rounded-full animate-ping"
             style={{ width: 36, height: 36, top: -18, left: -18, backgroundColor: eventColor, opacity: 0.3 }}
           />
           <div
-            className="rounded-full"
-            style={{ width: 16, height: 16, backgroundColor: eventColor, opacity: 0.85, transform: 'translate(-50%, -50%)', position: 'relative' }}
+            className="absolute rounded-full"
+            style={{ width: 16, height: 16, top: -8, left: -8, backgroundColor: eventColor, opacity: 0.85 }}
           />
         </div>
       )}

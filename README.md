@@ -1,6 +1,29 @@
-# UXClone - Open Source Session Replay & Analytics
+# UXClone — Open-Source Session Replay & Analytics
 
 UXClone is a powerful, self-hosted session replay and user analytics platform inspired by UXCam. It allows developers to capture user interactions, visualize sessions through an event-based replay engine, and gain deep insights into user behavior.
+
+<p align="center">
+  <a href="https://REPLACE-WITH-YOUR-VPS-URL"><img src="https://img.shields.io/badge/Live%20Demo-Visit-2ea44f?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo"></a>
+  <a href="https://github.com/muhammadshehzaib/UxCam-Clone"><img src="https://img.shields.io/badge/Source-GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js%2016-000000?logo=nextdotjs&logoColor=white" alt="Next.js 16">
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Express-000000?logo=express&logoColor=white" alt="Express">
+  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=white" alt="Redis">
+  <img src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white" alt="Docker">
+</p>
+
+> 📸 **Add a screenshot / replay GIF here.** Drop an image at `docs/screenshot.png` and uncomment the block below.
+<!--
+<p align="center">
+  <img src="docs/screenshot.png" alt="UXClone dashboard" width="850">
+</p>
+-->
+
+---
 
 ## 🚀 Features
 
@@ -25,7 +48,7 @@ The fastest way to get UXClone running is using Docker Compose.
 
 ### 1. Clone the repository
 ```bash
-git clone <repository-url>
+git clone https://github.com/muhammadshehzaib/UxCam-Clone.git
 cd UxCam-Clone
 ```
 

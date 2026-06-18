@@ -212,6 +212,10 @@ export default function DOMReplayViewer({
   const idMapRef       = useRef<Map<number, Node>>(new Map());
   const lastFrameRef   = useRef<number>(-1);
   const [aspectRatio, setAspectRatio] = useState(initialAspectRatio);
+  // Native pixel dimensions of the recorded viewport. The iframe is rendered at
+  // this size and CSS-scaled to fit, so the page keeps its original layout and
+  // the percentage-based click overlay lines up with the actual elements.
+  const [recordedSize, setRecordedSize] = useState<{ w: number; h: number } | null>(null);
 
   // Parse all frames once
   const parsedFrames = useRef<Array<DOMSnapshot | DOMMutation>>([]);
@@ -223,6 +227,7 @@ export default function DOMReplayViewer({
         const elapsedMs = f.elapsed_ms;
         if (parsed.type === 'snapshot' && parsed.width && parsed.height) {
           setAspectRatio(parsed.height / parsed.width);
+          setRecordedSize({ w: parsed.width, h: parsed.height });
         }
         return { ...parsed, elapsedMs };
       } catch {
@@ -302,16 +307,32 @@ export default function DOMReplayViewer({
     );
   }
 
+  // Scale the natively-sized iframe down to the player width. transform-origin
+  // top-left keeps (0,0) anchored so the scaled content exactly fills the box.
+  const scale = recordedSize ? width / recordedSize.w : 1;
+
   return (
     <div
-      className="w-full h-full"
+      className="w-full h-full overflow-hidden"
       data-testid="dom-replay-viewer"
     >
       <iframe
         ref={iframeRef}
         title="Session replay"
         sandbox="allow-same-origin allow-scripts"
-        style={{ width: '100%', height: '100%', border: 'none', display: 'block', backgroundColor: 'white' }}
+        style={
+          recordedSize
+            ? {
+                width:           recordedSize.w,
+                height:          recordedSize.h,
+                border:          'none',
+                display:         'block',
+                backgroundColor: 'white',
+                transform:       `scale(${scale})`,
+                transformOrigin: 'top left',
+              }
+            : { width: '100%', height: '100%', border: 'none', display: 'block', backgroundColor: 'white' }
+        }
         data-testid="replay-iframe"
       />
       {/* UXClone overlay — prevent user interaction with the iframe */}

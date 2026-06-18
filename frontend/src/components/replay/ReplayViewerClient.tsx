@@ -10,6 +10,7 @@ import { detectFeedbackEvents } from '@/lib/feedbackDetector';
 import { EVENT_COLORS } from '@/lib/utils';
 import ReplayCanvas from './ReplayCanvas';
 import DOMReplayViewer from './DOMReplayViewer';
+import ScreenReplayViewer, { ScreenFrame } from './ScreenReplayViewer';
 import TimelineBar from './TimelineBar';
 import PlaybackControls from './PlaybackControls';
 import SessionInfoPanel from './SessionInfoPanel';
@@ -20,12 +21,50 @@ interface ReplayViewerClientProps {
   session:       Session;
   events:        SessionEvent[];
   initialSeekMs?: number;
-  domFrames?:    DOMFrame[];   // populated when session has DOM recording
+  domFrames?:    DOMFrame[];     // populated when session has web DOM recording
+  screenFrames?: ScreenFrame[];  // populated when session has mobile screenshot recording
 }
 
-export default function ReplayViewerClient({ session, events, initialSeekMs, domFrames = [] }: ReplayViewerClientProps) {
-  const hasDOMRecording = domFrames.length > 0;
+// Derive the recorded aspect ratio (height / width) from the first DOM snapshot.
+// Used as a fallback when the session row is missing screen dimensions (e.g. a
+// non-web client that didn't send device info), so the player box keeps the
+// recording's real proportions instead of defaulting to a distorted 1000×600.
+function aspectFromDOMFrames(frames: DOMFrame[]): number | null {
+  for (const f of frames) {
+    if (f.type !== 'snapshot') continue;
+    try {
+      const parsed = JSON.parse(f.data);
+      if (parsed.width && parsed.height) return parsed.height / parsed.width;
+    } catch {
+      /* skip malformed frame */
+    }
+  }
+  return null;
+}
+
+export default function ReplayViewerClient({ session, events, initialSeekMs, domFrames = [], screenFrames = [] }: ReplayViewerClientProps) {
+  const hasDOMRecording    = domFrames.length > 0;
+  const hasScreenRecording = screenFrames.length > 0;
+  const hasVisualReplay    = hasDOMRecording || hasScreenRecording;
   const durationMs = session.duration_ms ?? (events.length > 0 ? events[events.length - 1].elapsed_ms + 100 : 0);
+
+  // Aspect ratio (height / width) of the player box. Prefer the session's
+  // recorded screen dimensions; fall back to a frame's intrinsic size; finally 16:9.
+  const screenFrameAspect =
+    screenFrames.find((f) => f.width && f.height) ?? null;
+  const fallbackAspect =
+    (screenFrameAspect ? screenFrameAspect.height! / screenFrameAspect.width! : null) ??
+    aspectFromDOMFrames(domFrames);
+  const aspectRatio =
+    session.screen_width && session.screen_height
+      ? session.screen_height / session.screen_width
+      : fallbackAspect ?? 0.6; // 0.6 == the previous 1000×600 default
+
+  // Player width by device. Phones/tablets are portrait (tall aspect), so a
+  // 1000px-wide frame would render absurdly tall — use a device-appropriate width.
+  const isMobile = session.device_type === 'mobile';
+  const isTablet = session.device_type === 'tablet';
+  const playerWidth = isMobile ? 390 : isTablet ? 620 : 1000;
 
   const { currentTimeMs, isPlaying, speed, activeEventIndex, play, pause, seek, setSpeed } =
     useReplayEngine(events, durationMs);
@@ -59,23 +98,26 @@ export default function ReplayViewerClient({ session, events, initialSeekMs, dom
         <div className="flex-shrink-0">
           <div 
             className="relative rounded-3xl border-8 border-surface-900 shadow-bloom-lg overflow-hidden bg-black ring-1 ring-white/10"
-            style={{ 
-              width: 1000, 
-              height: session.screen_width && session.screen_height 
-                ? (1000 * session.screen_height) / session.screen_width 
-                : 600 
+            style={{
+              width: playerWidth,
+              height: playerWidth * aspectRatio,
             }}
           >
             {hasDOMRecording && (
               <DOMReplayViewer
                 frames={domFrames}
                 currentTimeMs={currentTimeMs}
-                width={1000}
-                initialAspectRatio={session.screen_width && session.screen_height ? session.screen_height / session.screen_width : 16 / 9}
+                width={playerWidth}
+                initialAspectRatio={aspectRatio}
               />
             )}
-            
-            <div className={hasDOMRecording ? "absolute inset-0 z-10 pointer-events-none" : ""}>
+
+            {/* Mobile screenshot backdrop (when there's no DOM recording) */}
+            {!hasDOMRecording && hasScreenRecording && (
+              <ScreenReplayViewer frames={screenFrames} currentTimeMs={currentTimeMs} />
+            )}
+
+            <div className={hasVisualReplay ? "absolute inset-0 z-10 pointer-events-none" : ""}>
               <ReplayCanvas
                 events={events}
                 activeEventIndex={activeEventIndex}
@@ -83,8 +125,8 @@ export default function ReplayViewerClient({ session, events, initialSeekMs, dom
                 networkFailures={networkFailures}
                 screenWidth={session.screen_width}
                 screenHeight={session.screen_height}
-                showBackground={!hasDOMRecording}
-                width={1000}
+                showBackground={!hasVisualReplay}
+                width={playerWidth}
               />
             </div>
           </div>

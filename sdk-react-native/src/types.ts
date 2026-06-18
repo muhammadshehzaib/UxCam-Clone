@@ -33,10 +33,12 @@ export interface RNDeviceInfo {
 }
 
 export interface RNSDKConfig {
-  apiKey:          string;
-  endpoint:        string;
-  flushInterval?:  number;   // ms, default 5000
-  maxBatchSize?:   number;   // default 50
-  sampleRate?:     number;   // 0–1, default 1.0
-  appVersion?:     string;
+  apiKey:           string;
+  endpoint:         string;
+  flushInterval?:   number;   // ms, default 5000
+  maxBatchSize?:    number;   // default 50
+  sampleRate?:      number;   // 0–1, default 1.0
+  appVersion?:      string;
+  screenRecording?: boolean;  // capture periodic screenshots (needs react-native-view-shot)
+  screenInterval?:  number;   // ms between screenshots, default 1000
 }

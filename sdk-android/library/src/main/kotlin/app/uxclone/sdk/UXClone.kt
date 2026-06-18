@@ -23,24 +23,30 @@ import kotlin.random.Random
 object UXClone {
     private var config:        UXConfig?       = null
     private var sessionMgr:    SessionManager? = null
-    private var transport:     Transport?      = null
-    private var crashRecorder: CrashRecorder?  = null
-    private var currentScreen  = "App"
-    private var initialized    = false
+    private var transport:      Transport?      = null
+    private var crashRecorder:  CrashRecorder?  = null
+    private var screenRecorder: ScreenRecorder? = null
+    private var currentScreen   = "App"
+    private var initialized     = false
 
     // MARK: - Public API
 
     @JvmStatic
     fun initialize(
-        context:    Context,
-        apiKey:     String,
-        endpoint:   String,
-        appVersion: String = "1.0.0",
-        sampleRate: Double = 1.0,
+        context:         Context,
+        apiKey:          String,
+        endpoint:        String,
+        appVersion:      String  = "1.0.0",
+        sampleRate:      Double  = 1.0,
+        screenRecording: Boolean = false,
+        screenInterval:  Long    = 1_000L,
     ) {
         if (Random.nextDouble() > sampleRate) return
 
-        val cfg = UXConfig(apiKey = apiKey, endpoint = endpoint, appVersion = appVersion, sampleRate = sampleRate)
+        val cfg = UXConfig(
+            apiKey = apiKey, endpoint = endpoint, appVersion = appVersion, sampleRate = sampleRate,
+            screenRecording = screenRecording, screenInterval = screenInterval,
+        )
         val sm  = SessionManager(context.applicationContext)
         val t   = Transport(cfg, sm::sessionId, sm::anonymousId)
 
@@ -56,9 +62,26 @@ object UXClone {
             getCurrentScreen = { currentScreen },
         )
 
-        // Auto-flush on app lifecycle if it's an Application
+        val touchRec  = TouchRecorder(
+            push             = { e -> t.push(e) },
+            getElapsedMs     = sm::getElapsedMs,
+            getCurrentScreen = { currentScreen },
+        )
+        val screenRec = if (cfg.screenRecording)
+            ScreenRecorder(cfg.screenInterval, sm::getElapsedMs) { frame -> sendScreenFrame(cfg, sm, frame) }
+        else null
+        screenRecorder = screenRec
+
+        // Touch + screen capture require an Application context for lifecycle hooks.
         if (context is Application) {
-            context.registerActivityLifecycleCallbacks(UXLifecycleCallbacks { t.flush() })
+            context.registerActivityLifecycleCallbacks(
+                UXLifecycleCallbacks(
+                    onPause           = { t.flush() },
+                    onResumedActivity = { a -> touchRec.attachToActivity(a); screenRec?.setActivity(a) },
+                    onPausedActivity  = { a -> screenRec?.clearActivity(a) },
+                )
+            )
+            screenRec?.start()
         }
 
         t.startAutoFlush()
@@ -110,11 +133,32 @@ object UXClone {
         transport?.stopAutoFlush()
         transport?.flushSync()
         crashRecorder?.detach()
+        screenRecorder?.stop()
         initialized = false
-        config = null; sessionMgr = null; transport = null; crashRecorder = null
+        config = null; sessionMgr = null; transport = null; crashRecorder = null; screenRecorder = null
     }
 
     // MARK: - Private
+
+    /** Upload a single screenshot frame to the screen-ingest endpoint. */
+    private fun sendScreenFrame(cfg: UXConfig, sm: SessionManager, frame: JSONObject) {
+        try {
+            val payload = JSONObject().apply {
+                put("sessionId",   sm.sessionId)
+                put("anonymousId", sm.anonymousId)
+                put("apiKey",      cfg.apiKey)
+                put("frames",      org.json.JSONArray().put(frame))
+            }
+            val url  = URL("${cfg.endpoint}/api/v1/ingest/screen")
+            val conn = url.openConnection() as HttpURLConnection
+            conn.requestMethod = "POST"
+            conn.setRequestProperty("Content-Type", "application/json")
+            conn.doOutput = true
+            conn.outputStream.use { it.write(payload.toString().toByteArray()) }
+            conn.responseCode
+            conn.disconnect()
+        } catch (_: Exception) {}
+    }
 
     private fun sendSessionStart(context: Context, cfg: UXConfig, sm: SessionManager) {
         val wm      = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager

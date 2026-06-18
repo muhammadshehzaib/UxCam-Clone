@@ -41,6 +41,25 @@ async function getDOMFrames(sessionId: string, token: string) {
   }
 }
 
+async function getScreenFrames(sessionId: string, token: string) {
+  try {
+    const API_URL = 'http://uxclone-api:3001';
+    const res = await fetch(`${API_URL}/api/v1/sessions/${sessionId}/screens`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    });
+    if (!res.ok) {
+      console.warn(`[Dashboard:getScreenFrames] API error ${res.status}`);
+      return [];
+    }
+    const body = await res.json() as { data: unknown[] };
+    return body.data ?? [];
+  } catch (err) {
+    console.error('[Dashboard:getScreenFrames] Fetch failed:', err);
+    return [];
+  }
+}
+
 export const revalidate = 0;
 
 export default async function SessionReplayPage({ params, searchParams }: Props) {
@@ -56,15 +75,17 @@ export default async function SessionReplayPage({ params, searchParams }: Props)
   let session  = null;
   let events   = null;
   let domFrames: unknown[] = [];
+  let screenFrames: unknown[] = [];
   let error: string | null = null;
 
   try {
     console.log(`[Dashboard:SessionReplayPage] Fetching data for session ${id}`);
-    
-    [session, events, domFrames] = await Promise.all([
+
+    [session, events, domFrames, screenFrames] = await Promise.all([
       getSession(id, token),
       getSessionEvents(id, token),
       getDOMFrames(id, token),
+      getScreenFrames(id, token),
     ]);
   } catch (err: any) {
     console.error('[Dashboard:SessionReplayPage] Data fetch failed:', err);
@@ -128,6 +149,7 @@ export default async function SessionReplayPage({ params, searchParams }: Props)
           events={events ?? []}
           initialSeekMs={initialSeekMs}
           domFrames={domFrames as Array<{ data: string; elapsed_ms: number; type: string }>}
+          screenFrames={screenFrames as Array<{ data: string; elapsed_ms: number; width?: number; height?: number }>}
         />
       </div>
     </div>

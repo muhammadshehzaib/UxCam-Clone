@@ -19,7 +19,10 @@ import reportsRouter from './routes/reports';
 const app = express();
 
 app.use(cors());
-app.use(express.json({ limit: '1mb' }));
+// 4mb accommodates the largest replay payloads: DOM snapshots (capped at 2MB in
+// domSnapshotService) and base64 screenshots (capped at 1MB in screenFrameService),
+// plus the JSON envelope. Smaller endpoints are unaffected by the higher ceiling.
+app.use(express.json({ limit: '4mb' }));
 
 // Request logger showing method, URL, and status code
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
