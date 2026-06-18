@@ -41,7 +41,7 @@ docker-compose up -d --build
 ```
 
 ### 4. Access the services
-- **Dashboard**: [http://localhost:3000](http://localhost:3000)
+- **Dashboard**: [http://localhost:3009](http://localhost:3009)
 - **API Server**: [http://localhost:3001](http://localhost:3001)
 
 ---
@@ -59,6 +59,27 @@ To generate synthetic data for testing:
 1. Open `sdk/dev/test-harness.html` in your browser.
 2. Click "Start Session" and interact with the page.
 3. Refresh the Dashboard to see your session appear.
+
+## Testing on a mobile phone
+UXCam is a **mobile SDK**, but the **dashboard is a web app**. To test UXClone with a real phone, you usually do:
+
+1) Open the dashboard on your phone (same Wi‑Fi as your computer)
+2) Send events from the phone (either via the browser harness, or by integrating the Android/iOS/React‑Native SDK into a test app)
+
+### A) View the dashboard on your phone
+1. Start services: `docker-compose up -d --build`
+2. Find your computer’s LAN IP (Windows): `ipconfig` → `IPv4 Address` (example: `192.168.1.50`)
+3. On your phone (same Wi‑Fi), open: `http://YOUR_LAN_IP:3009`
+
+### B) Send test sessions from your phone (browser)
+1. Build the web SDK bundle: `npm --prefix sdk run full-build`
+2. Serve the `sdk` folder (so `dev/` and `dist/` are both reachable):
+   - `cd sdk`
+   - `python -m http.server 8000`
+3. On your phone, open: `http://YOUR_LAN_IP:8000/dev/test-harness.html`
+4. Paste your project API key and click **Init SDK** / **Generate Synthetic Session**.
+
+If Windows Firewall blocks access, allow inbound TCP for ports `3001`, `3009`, and `8000`.
 
 ## 🏗 Architecture
 

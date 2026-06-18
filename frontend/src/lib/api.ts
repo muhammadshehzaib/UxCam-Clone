@@ -20,10 +20,18 @@ import {
   PaginatedResponse,
 } from '@/types';
 
-const isServer = typeof window === 'undefined';
-const API_URL = isServer 
-  ? 'http://uxclone-api:3001' 
-  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001');
+function resolveApiBaseUrl() {
+  const isServer = typeof window === 'undefined';
+  return isServer 
+    ? 'http://uxclone-api:3001' 
+    : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001');
+}
+
+const API_URL = {
+  toString() {
+    return resolveApiBaseUrl();
+  }
+} as unknown as string;
 
 function getToken(): string {
   // Client-side: read from cookie

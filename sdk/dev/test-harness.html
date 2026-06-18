@@ -19,7 +19,7 @@
 </head>
 <body>
   <h1>UXClone SDK Test Harness</h1>
-  <p>Generates synthetic user interactions and sends them to the local API (<code>http://localhost:3001</code>).</p>
+  <p>Generates synthetic user interactions and sends them to your API (defaults to <code>http://{this-host}:3001</code>, or override with <code>?api=http://YOUR_IP:3001</code>).</p>
   <p>Status: <span id="status" class="status">Not initialized</span></p>
 
   <h2>Configuration</h2>
@@ -61,7 +61,17 @@
 
     const UXClone = typeof UXCloneSDK !== 'undefined' ? UXCloneSDK.UXClone : null;
 
-    const API = 'http://localhost:3001';
+    function resolveApiBase() {
+      const params = new URLSearchParams(window.location.search);
+      const fromQuery = params.get('api');
+      if (fromQuery) return fromQuery.replace(/\/$/, '');
+
+      // If you open this page from your phone (e.g. http://192.168.x.x:8000/dev/test-harness.html)
+      // then `location.hostname` will already be your computer's LAN IP.
+      return `http://${window.location.hostname || 'localhost'}:3001`;
+    }
+
+    const API = resolveApiBase();
     
     function getApiKey() {
       return document.getElementById('api_key_input').value.trim();

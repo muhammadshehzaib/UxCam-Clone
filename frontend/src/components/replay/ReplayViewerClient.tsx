@@ -172,5 +172,3 @@ export default function ReplayViewerClient({ session, events, initialSeekMs, dom
     </div>
   );
 }
-  );
-}

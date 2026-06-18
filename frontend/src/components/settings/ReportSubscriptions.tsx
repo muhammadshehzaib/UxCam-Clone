@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { resolveApiBaseUrl } from '@/lib/apiUrl';
 
 interface Report {
   id: string; email: string; frequency: string; enabled: boolean; last_sent_at: string | null;
@@ -13,7 +14,7 @@ interface ReportSubscriptionsProps {
 }
 
 async function subscribe(projectId: string, email: string) {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+  const API_URL = resolveApiBaseUrl();
   const TOKEN   = typeof document !== 'undefined'
     ? document.cookie.split('; ').find((c) => c.startsWith('uxclone_token='))?.split('=').slice(1).join('=') ?? ''
     : '';
@@ -29,7 +30,7 @@ async function subscribe(projectId: string, email: string) {
 }
 
 async function unsubscribe(id: string) {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+  const API_URL = resolveApiBaseUrl();
   const TOKEN   = typeof document !== 'undefined'
     ? document.cookie.split('; ').find((c) => c.startsWith('uxclone_token='))?.split('=').slice(1).join('=') ?? ''
     : '';
