@@ -1,0 +1,85 @@
+# Production stack for UxCam-Clone.
+# Two public origins via the host nginx:
+#   uxcam.shehzaib.com     -> dashboard (Next.js, 127.0.0.1:3009)
+#   uxcamapi.shehzaib.com  -> api + /sdk.js (Express, 127.0.0.1:3001)
+# Postgres / Redis / MinIO are internal only (not published).
+# Container names are auto-derived from the compose project so this stack can run
+# alongside others without name clashes.
+#
+#   docker compose -f docker-compose.prod.yml up -d --build
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: uxclone
+      POSTGRES_USER: uxclone
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-uxclone}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U uxclone']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-uxclone}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-uxclone-minio-secret}
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.prod
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+    ports:
+      - '127.0.0.1:${API_HOST_PORT:-3001}:3001'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        # Browser calls the public API; SSR uses the internal api hostname.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?set NEXT_PUBLIC_API_URL to the public API URL}
+        DASHBOARD_API_URL: ${DASHBOARD_API_URL:-http://api:3001}
+        DASHBOARD_TOKEN: ${DASHBOARD_TOKEN:?set DASHBOARD_TOKEN}
+    ports:
+      - '127.0.0.1:${DASHBOARD_HOST_PORT:-3009}:3000'
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:

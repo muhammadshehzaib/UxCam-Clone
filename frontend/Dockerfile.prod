@@ -1,0 +1,32 @@
+# syntax=docker/dockerfile:1
+
+# ── Build stage ──────────────────────────────────────────────────────────────
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# next.config.ts bakes these in at build time (env block + NEXT_PUBLIC_*)
+ARG NEXT_PUBLIC_API_URL
+ARG DASHBOARD_API_URL
+ARG DASHBOARD_TOKEN
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV DASHBOARD_API_URL=$DASHBOARD_API_URL
+ENV DASHBOARD_TOKEN=$DASHBOARD_TOKEN
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+RUN npm run build
+
+# ── Production stage (standalone) ────────────────────────────────────────────
+FROM node:20-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
+EXPOSE 3000
+CMD ["node", "server.js"]

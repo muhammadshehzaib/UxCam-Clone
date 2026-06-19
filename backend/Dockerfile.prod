@@ -1,0 +1,30 @@
+# syntax=docker/dockerfile:1
+# Build context = repo ROOT (so this image can also build the browser SDK bundle).
+
+# ── Stage 1: build the browser SDK bundle (fresh on every build) ──────────────
+FROM node:20-alpine AS sdk-build
+WORKDIR /sdk
+COPY sdk/package*.json ./
+RUN npm ci
+COPY sdk/ ./
+RUN npm run bundle    # -> /sdk/dist/uxclone-sdk.js
+
+# ── Stage 2: API server (production) ─────────────────────────────────────────
+FROM node:20-alpine
+WORKDIR /app
+
+# Install ALL deps (incl dev) so tsc/tsx are available for build + migrate.
+# NODE_ENV=production is set AFTER install so npm doesn't skip devDependencies.
+COPY backend/package*.json ./
+RUN npm install
+
+COPY backend/ ./
+
+# Bake the freshly built SDK bundle at the stable path served by GET /sdk.js
+COPY --from=sdk-build /sdk/dist/uxclone-sdk.js /sdk/uxclone-sdk.js
+
+ENV NODE_ENV=production
+EXPOSE 3001
+
+# Run with tsx (the app's tested runtime; the repo never wired up a passing tsc build).
+CMD sh -c "npm run migrate && npx tsx src/index.ts"
