@@ -3,7 +3,8 @@
 import { useMemo } from 'react';
 
 export interface ScreenFrame {
-  data:       string;   // base64 JPEG or full data URI
+  data?:      string | null;   // base64 JPEG / data URI (fallback when Cloudinary is off)
+  url?:       string | null;   // Cloudinary CDN URL (preferred)
   elapsed_ms: number;
   width?:     number;
   height?:    number;
@@ -14,9 +15,12 @@ interface ScreenReplayViewerProps {
   currentTimeMs: number;
 }
 
-/** Normalize a stored frame to a usable <img> src. */
-function toSrc(data: string): string {
-  return data.startsWith('data:') ? data : `data:image/jpeg;base64,${data}`;
+/** Normalize a stored frame to a usable <img> src: Cloudinary URL > http(s) > base64. */
+function toSrc(frame: ScreenFrame): string {
+  if (frame.url) return frame.url;
+  const data = frame.data ?? '';
+  if (/^https?:\/\//.test(data) || data.startsWith('data:')) return data;
+  return `data:image/jpeg;base64,${data}`;
 }
 
 /**
@@ -53,7 +57,7 @@ export default function ScreenReplayViewer({ frames, currentTimeMs }: ScreenRepl
       {activeFrame && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={toSrc(activeFrame.data)}
+          src={toSrc(activeFrame)}
           alt="Session screen"
           draggable={false}
           style={{ width: '100%', height: '100%', objectFit: 'fill', display: 'block' }}

@@ -149,7 +149,7 @@ export default async function SessionReplayPage({ params, searchParams }: Props)
           events={events ?? []}
           initialSeekMs={initialSeekMs}
           domFrames={domFrames as Array<{ data: string; elapsed_ms: number; type: string }>}
-          screenFrames={screenFrames as Array<{ data: string; elapsed_ms: number; width?: number; height?: number }>}
+          screenFrames={screenFrames as Array<{ data?: string | null; url?: string | null; elapsed_ms: number; width?: number; height?: number }>}
         />
       </div>
     </div>

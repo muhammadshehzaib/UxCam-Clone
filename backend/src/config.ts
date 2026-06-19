@@ -8,4 +8,13 @@ export const config = {
   dashboardToken: process.env.DASHBOARD_TOKEN ?? 'dev-dashboard-token',
   isDev:      process.env.NODE_ENV !== 'production',
   cronSecret: process.env.CRON_SECRET ?? '',
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME ?? '',
+    apiKey:    process.env.CLOUDINARY_API_KEY ?? '',
+    apiSecret: process.env.CLOUDINARY_API_SECRET ?? '',
+  },
 };
+
+/** True when all three Cloudinary credentials are present. */
+export const cloudinaryEnabled =
+  Boolean(config.cloudinary.cloudName && config.cloudinary.apiKey && config.cloudinary.apiSecret);
