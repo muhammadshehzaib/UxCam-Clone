@@ -1,0 +1,7 @@
+# Local override (not tracked) — host 6379 is already used by a local redis-server.
+# The api container reaches redis via the internal network (redis:6379), so we
+# just remap the host publish to avoid the bind conflict.
+services:
+  redis:
+    ports:
+      - '6380:6379'

@@ -32,9 +32,10 @@ services:
       retries: 5
 
   api:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile
+    build:
+      # Root context so the image can also build the browser SDK bundle from sdk/.
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: uxclone-api
     env_file:
       - .env

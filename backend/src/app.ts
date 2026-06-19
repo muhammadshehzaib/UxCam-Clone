@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import fs from 'fs';
+import path from 'path';
 import 'dotenv/config';
 import ingestRouter from './routes/ingest';
 import sessionsRouter from './routes/sessions';
@@ -35,6 +37,37 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
 });
 
 app.get('/health', (_req: express.Request, res: express.Response) => res.json({ status: 'ok' }));
+
+// ── Public SDK loader ──────────────────────────────────────────────────────────
+// Serves the browser SDK bundle so customers can embed
+//   <script src="https://your-api-host/sdk.js"></script>
+// The bundle is rebuilt from source on every Docker image build (see
+// backend/Dockerfile, sdk-build stage), so it can never go stale the way a
+// hand-built sdk/dist/ can — that staleness was what made replays show clicks
+// only, with no screen.
+const SDK_BUNDLE_CANDIDATES = [
+  process.env.SDK_BUNDLE_PATH,                                 // explicit override
+  '/sdk/uxclone-sdk.js',                                       // baked into the Docker image
+  path.resolve(__dirname, '../../sdk/dist/uxclone-sdk.js'),    // local dev (repo checkout)
+].filter((p): p is string => Boolean(p));
+
+function resolveSdkBundle(): string | null {
+  for (const p of SDK_BUNDLE_CANDIDATES) {
+    try { if (fs.existsSync(p)) return p; } catch { /* ignore */ }
+  }
+  return null;
+}
+
+app.get('/sdk.js', (_req: express.Request, res: express.Response) => {
+  const bundle = resolveSdkBundle();
+  res.type('application/javascript');
+  if (!bundle) {
+    res.status(503).send('// UXClone SDK bundle not found. Rebuild the image (docker compose build api) or run `npm run bundle` in sdk/.');
+    return;
+  }
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.sendFile(bundle);
+});
 
 app.use('/api/v1/ingest', ingestRouter);
 app.use('/api/v1/sessions/:sessionId/events', eventsRouter);

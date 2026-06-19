@@ -1,0 +1,10 @@
+# Keep the (now repo-root) Docker build context lean for the api image build.
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+.git
+**/*.log
+.env
+**/.env.local
+**/.DS_Store
