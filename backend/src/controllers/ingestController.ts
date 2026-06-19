@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { ProjectRequest } from '../middleware';
 import * as ingestService from '../services/ingestService';
+import * as domSnapshotService from '../services/domSnapshotService';
 
 export async function sessionStart(req: ProjectRequest, res: Response): Promise<void> {
   const { sessionId, anonymousId, startedAt, device = {} } = req.body;
@@ -46,6 +47,8 @@ export async function sessionEnd(req: ProjectRequest, res: Response): Promise<vo
 
   try {
     const durationMs = await ingestService.endSession(req.project!.id, sessionId, endedAt);
+    // Archive web DOM frames to object storage (fire-and-forget; safe no-op if MinIO is off).
+    void domSnapshotService.compactSessionToStorage(sessionId, req.project!.id);
     res.json({ data: { durationMs } });
   } catch (err) {
     console.error('sessionEnd error:', err);

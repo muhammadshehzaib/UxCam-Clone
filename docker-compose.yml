@@ -31,6 +31,21 @@ services:
       timeout: 5s
       retries: 5
 
+  # Self-hosted S3-compatible object storage for replay blobs (web DOM recordings).
+  # Host ports 9100/9101 — 9000 is reserved on this machine, so we don't publish it.
+  minio:
+    image: minio/minio:latest
+    container_name: uxclone-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-uxclone}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-uxclone-minio-secret}
+    ports:
+      - '9100:9000'   # S3 API
+      - '9101:9001'   # web console (file-explorer UI)
+    volumes:
+      - minio_data:/data
+
   api:
     build:
       # Root context so the image can also build the browser SDK bundle from sdk/.
@@ -51,6 +66,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      minio:
+        condition: service_started
 
   dashboard:
     build:
@@ -73,3 +90,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  minio_data:
